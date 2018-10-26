@@ -239,8 +239,9 @@ def plot_trace(ax, trace):
 
 def read_geolife_files(count):
     traj_set = list(only_plt('/data/Trajectory_Sets/Geolife Trajectories 1.3'))
+
     #print(len(traj_set))
-    trajectory_files = random.sample(traj_set, count)
+    trajectory_files = random.sample(traj_set, min(count, len(traj_set)))
 
     all_traces = []
     for fname in trajectory_files:

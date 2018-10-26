@@ -3,12 +3,14 @@ import matplotlib.pyplot as plt
 import random
 import math
 
+import statistics
+
 def plot_points(ax, pts, c):
     xs = []
     ys = []
     for pt in pts:
-        xs.append(pt.getX())
-        ys.append(pt.getY())
+        xs.append(pt[0] )
+        ys.append(pt[1])
     ax.scatter(xs, ys, color=c)
 
 def plot_points_traj(ax, pts, c):
@@ -26,91 +28,86 @@ def plot_tuples(ax, pts, c):
         xs.append(pt[0])
         ys.append(pt[1])
     ax.plot(xs, ys, color=c)
+    #ax.scatter(xs, ys, color=c)
 
-def halfplane_approx_example():
+
+def boxed_trajectory(count):
+    """
+    Creates a trajectory constrained to a box
+    :return:
+    """
     st_pt = (0.0,0.0)
     pts = [st_pt]
-    for i in range(100):
-        pts.append(((random.random() - .5) / 10.0 + pts[-1][0], (random.random() - .5) / 10.0 + pts[-1][1]))
-
-    new_pts = pyscan.approximate_hull(.00001, pts)
-
-    ax = plt.subplot()
-    plot_tuples(ax, pts, "b")
-    plot_points(ax, new_pts, "r")
-    plt.show()
+    for i in range(count):
+        pts.append((random.random() - .5 + pts[-1][0], random.random() -.5 + pts[-1][1]))
 
 
+    mnx = min(pts, key= lambda x: x[0])[0]
+    mxx = max(pts, key= lambda x: x[0])[0]
+    mny = min(pts, key=lambda x: x[1])[1]
+    mxy = max(pts, key=lambda x: x[1])[1]
 
-def grid_approx_example():
-    st_pt = (0.0,0.0)
-    pts = [st_pt]
-    for i in range(100):
-        pts.append(((random.random() - .5) / 10.0 + pts[-1][0], (random.random() - .5) / 10.0 + pts[-1][1]))
+    mdx = statistics.median([pt[0] for pt in pts])
+    mdy = statistics.median([pt[1] for pt in pts])
 
-    alpha = .001
-    min_r = 10000
-    chord_l = math.sqrt(2 * alpha * (2 * min_r - alpha))
-    print(chord_l)
-    new_pts = pyscan.grid_traj(pts, chord_l)
-    print(len(new_pts))
-    ax = plt.subplot()
-    plot_tuples(ax, pts, "b")
-    new_pt_list = []
-    for key in new_pts:
-        new_pt_list.extend(new_pts[key])
-    print(new_pts)
-    plot_points(ax, new_pt_list, "r")
-    plt.show()
+    pts = [((pt[0] - mnx) / (mxx - mnx), (pt[1] - mny) / (mxy - mny)) for pt in pts]
+    mdx = statistics.median([pt[0] for pt in pts])
+    mdy = statistics.median([pt[1] for pt in pts])
+    pts = [(pt[0] - mdx , pt[1] - mdy) for pt in pts]
+    return pts
 
 
-def grid_coreset_example():
-    st_pt = (0.0,0.0)
-    pts = [st_pt]
-    for i in range(100):
-        pts.append(((random.random() - .5) / 10.0 + pts[-1][0], (random.random() - .5) / 10.0 + pts[-1][1]))
+def full_coreset_example(point_count, alpha, method, min_r=None):
+    if min_r is None:
+        min_r = alpha
 
-    alpha = .01
-    min_r = 1.0
-    chord_l = math.sqrt(2 * alpha * (2 * min_r - alpha))
-    print(chord_l)
-    grid_pts = pyscan.grid_traj(pts, chord_l)
-    grid_pts_list = []
-    for key in grid_pts:
-        grid_pts_list.extend(grid_pts[key])
+    pts = boxed_trajectory(point_count)
+    if method == "lifting":
+        core_set_pts = pyscan.lifting_kernel(pts, alpha)
+    elif method == "grid":
+        core_set_pts = pyscan.grid_kernel(pts, alpha)
+    elif method =="grid_alt":
+        core_set_pts = pyscan.grid_trajectory(pts, alpha)
+    elif method == "grid_direc":
+        chord_l = math.sqrt(4 * alpha * min_r - 2 * alpha * alpha)
+        core_set_pts = pyscan.grid_direc_kernel(pts, chord_l, alpha)
+    elif method == "kernel":
+        core_set_pts = pyscan.halfplane_kernel(pts, alpha)
+    elif method == "dp":
+        core_set_pts = pyscan.dp_compress(pts, alpha)
+    else:
+        return
 
-    new_pts = pyscan.approx_traj_cells(pts, chord_l, alpha)
-
-    ax = plt.subplot()
-
-    new_pt_list = []
-    for key in new_pts:
-        new_pt_list.extend(new_pts[key])
-
-    plot_tuples(ax, pts, "g")
-    plot_points(ax, grid_pts_list, "b")
-    plot_points(ax, new_pt_list, "r")
-    plt.show()
-
-
-def coreset_3d_example():
-    st_pt = (0.0,0.0)
-    pts = [st_pt]
-    for i in range(100):
-        pts.append(((random.random() - .5) / 10.0 + pts[-1][0], (random.random() - .5) / 10.0 + pts[-1][1]))
-
-    alpha = .01
-
-    grid_pts = pyscan.grid_traj(pts, .005)
-    grid_pts_list = []
-    for key in grid_pts:
-        grid_pts_list.extend(grid_pts[key])
-    core_set_pts = pyscan.core_set_3d_traj(grid_pts_list, alpha)
     ax = plt.subplot()
 
     plot_tuples(ax, pts, "g")
-    plot_points(ax, core_set_pts, "r")
-    plt.show()
+    plot_points(ax, core_set_pts, "b")
 
 
-coreset_3d_example()
+
+def partial_coreset_example(traj_count, point_count, s, method):
+    trajectories = [boxed_trajectory(point_count) for i in range(traj_count)]
+
+    if method == "even":
+        core_set_pts = pyscan.even_sample(trajectories, s, False)
+    elif method == "uniform":
+        core_set_pts = pyscan.uniform_sample(trajectories, s, False)
+    elif method == "block":
+        core_set_pts = pyscan.block_sample(trajectories, s, False)
+    ax = plt.subplot()
+
+    for traj in trajectories:
+        plot_tuples(ax, traj, "g")
+
+    plot_points(ax, core_set_pts, "b")
+
+
+for method in ["even", "block", "uniform"]:
+    partial_coreset_example(1, 20, 100, method)
+    plt.savefig(method + "_partial.pdf")
+    plt.clf()
+
+for method in ["lifting", "grid", "grid_alt", "grid_direc", "kernel", "dp"]:
+    full_coreset_example(20, .1, method, min_r=.1)
+    plt.savefig(method + "_full.pdf")
+    plt.clf()
