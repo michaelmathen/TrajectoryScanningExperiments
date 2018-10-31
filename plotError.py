@@ -11,9 +11,9 @@ if __name__ == "__main__":
     with open(args.prefix + "_error.csv", 'r') as csvFile:
         reader = csv.DictReader(csvFile)
         all_rows = [row for row in reader]
-        error = [row['error'] for row in all_rows]
+        error = [row['m_disc'] for row in all_rows]
 
-        r_prime = [row['r_prime'] for row in all_rows]
+        time = [row['time'] for row in all_rows]
         plt.hold(True)
         ax = plt.subplot(1,1,1)
         p, = ax.plot(r_prime, error, label='Function Error')

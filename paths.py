@@ -236,6 +236,19 @@ def plot_trace(ax, trace):
         ax.plot(x, y, '.')
 
 
+def inside_box(pt):
+    return 116.8 > pt[1] >116 and 40.2 > pt[0] > 39.83
+
+def rescale(pt):
+    return pyscan.Point((pt[0] - 39.83) / (40.2 - 39.83), (pt[1] - 116) / 0.8, 1.0)
+
+def clean(trajectories):
+    new_set = []
+    for traj in trajectories:
+        new_traj = [rescale(pt) for pt in traj if inside_box(pt)]
+        if new_traj:
+            new_set.append(new_traj)
+    return new_set
 
 def read_geolife_files(count):
     traj_set = list(only_plt('/data/Trajectory_Sets/Geolife Trajectories 1.3'))
@@ -256,7 +269,8 @@ def read_geolife_files(count):
             for row in reader:
                 trace.append(pyscan.Point(float(row[0]), float(row[1]), 1))
             all_traces.append(trace)
-    normed_traces = normalize_all_projection(all_traces)
+    normed_traces = clean(all_traces)
+
     return normed_traces
 
 

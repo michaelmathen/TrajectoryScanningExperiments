@@ -20,6 +20,7 @@ def testing_partial_framework(
         disc_name="disc",
         region_name="disk",
         sample_method="block",
+        planted_points=None,
         input_size=10000):
 
     """
@@ -41,7 +42,7 @@ def testing_partial_framework(
     :param input_size:
     :return:
     """
-    output_file = "{}_{}_partial_discrepancy.csv".format(disc_name, region_name)
+    output_file = "{}_{}_{}_partial_discrepancy.csv".format(disc_name, region_name, sample_method)
 
     fieldnames = ["vparam", "input_size", "disc", "region", "n", "s", "r", "p", "q", "time",
                   "m_disc",
@@ -53,11 +54,6 @@ def testing_partial_framework(
         disc = utils.disc_to_func(disc_name)
         scan = utils.range_to_func(region_name)
 
-        if vparam == "eps":
-            if region_name == "disk":
-                red, blue, _ = pyscan.plant_trajectory_disk(trajectories, r, p, q, disc)
-            elif region_name == "halfplane":
-                red, blue, _ = pyscan.plant_trajectory_halfplane(trajectories, r, p, q, disc)
 
         for i in np.logspace(l_s, h_s, count):
 
@@ -73,11 +69,14 @@ def testing_partial_framework(
             s = int(round(s) + .1)
 
             st = time.time()
-            if vparam != "eps":
+            #if vparam != "eps":
+            if planted_points is None:
                 if region_name == "disk":
-                    red, blue, _ = pyscan.plant_trajectory_disk(trajectories, r, p, q, disc)
+                    red, blue, _ = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
                 elif region_name == "halfplane":
-                    red, blue, _ = pyscan.plant_trajectory_halfplane(trajectories, r, p, q, disc)
+                    red, blue, _ = pyscan.plant_partial_halfplane(trajectories, r, p, q, eps_r, disc)
+            else:
+                red, blue = planted_points
 
             et = time.time()
             print("Time to plant region {}".format(et - st))
@@ -140,11 +139,26 @@ def testing_partial_framework(
                    "sample_method": sample_method}
             writer.writerow(row)
             print(row)
-
+            f.flush()
 
 if __name__ == "__main__":
 
-    trajectories = paths.read_geolife_files(1000)
-    for range in ["halfspace", "disk"]:
-        for sample in ["block", "even", "uniform"]:
-            testing_partial_framework(trajectories, -1, -2, 10, r=.01, q=0.0, region_name="disk", sample_method=sample)
+    trajectories = paths.read_geolife_files(10000)
+
+    r = .01
+    q = .2
+    p = .5
+    eps_r = .001
+    disc = utils.disc_to_func("disc")
+    for region_name in ["halfplane"]:
+        if region_name == "disk":
+            red, blue, _ = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
+        elif region_name == "halfplane":
+            red, blue, _ = pyscan.plant_partial_halfplane(trajectories, r, p, q, eps_r, disc)
+
+        for sample in ["uniform", "block", "even"]:
+            disc = utils.disc_to_func("disc")
+
+
+            testing_partial_framework(trajectories, -1, -2, 40, r=.01, q=0.1, region_name=region_name,
+                                      sample_method=sample, planted_points=(red, blue))

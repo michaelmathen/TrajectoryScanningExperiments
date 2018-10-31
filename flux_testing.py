@@ -52,9 +52,9 @@ def testing_flux_framework(
             st = time.time()
             red, blue = pyscan.paired_plant_region(st_pts, end_pts, r, q, eps_r, scan)
 
-            # plt.scatter([x[0] for x in red], [x[1] for x in red], c="r")
-            # plt.scatter([x[0] for x in blue], [x[1] for x in blue], c="b")
-            # plt.show()
+            plt.scatter([x[0] for x in red], [x[1] for x in red], c="r")
+            plt.scatter([x[0] for x in blue], [x[1] for x in blue], c="b")
+            plt.show()
 
             et = time.time()
             print("Time to plant region {}".format(et - st))
@@ -94,4 +94,5 @@ if __name__ == "__main__":
     st_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in st_pts]
     end_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in end_pts]
     print(st_pts)
-    testing_flux_framework(st_pts, end_pts, -1, -3, 10, r=.01, q=0.0)
+    for region in ["disk"]:
+        testing_flux_framework(st_pts, end_pts, -1, -3, 10, r=.1, q=0.0, region_name=region)

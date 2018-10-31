@@ -36,6 +36,7 @@ def boxed_trajectory(count):
     Creates a trajectory constrained to a box
     :return:
     """
+    random.seed(2)
     st_pt = (0.0,0.0)
     pts = [st_pt]
     for i in range(count):
