@@ -64,7 +64,7 @@ def full_coreset_example(point_count, alpha, method, min_r=None):
 
     pts = boxed_trajectory(point_count)
     if method == "lifting":
-        core_set_pts = pyscan.lifting_kernel(pts, alpha)
+        core_set_pts = pyscan.lifting_kernel(pts, math.sqrt(alpha))
     elif method == "grid":
         core_set_pts = pyscan.grid_kernel(pts, alpha)
     elif method =="grid_alt":

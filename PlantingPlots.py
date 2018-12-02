@@ -4,8 +4,9 @@ import pyscan
 import utils
 import numpy as np
 import paths
-
-
+import itertools
+import math
+import random
 
 def plot_tuples(ax, pts, c):
     xs = []
@@ -13,23 +14,30 @@ def plot_tuples(ax, pts, c):
     for pt in pts:
         xs.append(pt[0])
         ys.append(pt[1])
-    ax.plot(xs, ys, color=c)
+    ax.scatter(xs, ys, color=c, marker='.')
 
 
 def plot_partial_trajectories(trajectories, r, p, q, eps_r):
     disc = utils.disc_to_func("disc")
     red, blue, mx_disk, _ = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
 
-
     ax = plt.subplot()
-    for traj in red:
-        plot_tuples(ax, traj.get_pts(), "r")
+    rpts = list(itertools.chain.from_iterable([traj.get_pts() for traj in red]))
+    rpts = random.sample(rpts, 400)
 
-    for traj in blue:
-        plot_tuples(ax, traj.get_pts(), "b")
+    plot_tuples(ax, list(rpts), "r")
 
-    actor = plt.Circle((mx_disk.get_origin()[0], mx_disk.get_origin()[1]), mx_disk.get_radius())
+
+    bpts = list(itertools.chain.from_iterable([traj.get_pts() for traj in blue]))
+    bpts = random.sample(bpts, 400)
+    plot_tuples(ax, bpts, "b")
+
+    actor = plt.Circle((mx_disk.get_origin()[0], mx_disk.get_origin()[1]), mx_disk.get_radius(), edgecolor="k", linewidth=2, fill=False)
     ax.add_artist(actor)
+    ax.set_xlim(0, 1.0)
+    ax.set_ylim(0, 1.0)
+    plt.tight_layout()
+    plt.axis('off')
     plt.show()
 
 
@@ -71,6 +79,49 @@ def plot_plane_partial_trajectories(trajectories, r, p, q, eps_r):
     ax.plot(xs, ys, color="g")
     plt.show()
 
+def plot_plane_flux_trajectories(trajectories, r, q, eps_r):
+
+    st_pts, end_pts = pyscan.trajectories_to_flux(trajectories)
+
+    st_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in st_pts]
+    end_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in end_pts]
+
+    scan = utils.range_to_func("halfplane")
+    red, blue, mx_plane = pyscan.paired_plant_region(st_pts, end_pts, r, q, eps_r, scan)
+    ax = plt.subplot()
+    ax.scatter([x[0] for x in red], [x[1] for x in red], c="r")
+    ax.scatter([x[0] for x in blue], [x[1] for x in blue], c="b")
+
+    xs = np.arange(0, 1, .01)
+
+
+    ys = (-1 - mx_plane.get_coords()[0] * xs) * 1 / mx_plane.get_coords()[1]
+    ax.plot(xs, ys, color="g")
+    ax.set_xlim(0, 1.0)
+    ax.set_ylim(0, 1.0)
+    plt.show()
+
+def plot_disk_flux_trajectories(trajectories, r, q, eps_r):
+
+    st_pts, end_pts = pyscan.trajectories_to_flux(trajectories)
+
+    st_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in st_pts]
+    end_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in end_pts]
+
+    scan = utils.range_to_func("disk")
+    red, blue, mx_disk = pyscan.paired_plant_region(st_pts, end_pts, r, q, eps_r, scan)
+    ax = plt.subplot()
+    actor = plt.Circle((mx_disk.get_origin()[0], mx_disk.get_origin()[1]), mx_disk.get_radius(), fill=False)
+    ax.add_artist(actor)
+
+    ax.scatter([x[0] for x in red], [x[1] for x in red], c="r")
+    ax.scatter([x[0] for x in blue], [x[1] for x in blue], c="b")
+
+    ax.set_xlim(0, 1.0)
+    ax.set_ylim(0, 1.0)
+    plt.show()
+
+
 
 def plot_plane_full_trajectories(trajectories, r, p, q):
     disc = utils.disc_to_func("disc")
@@ -89,8 +140,95 @@ def plot_plane_full_trajectories(trajectories, r, p, q):
     plt.show()
 
 
-trajectories = paths.read_geolife_files(1000)
+def testing(trajectories, alpha, max_r, count):
+
+    for i in np.linspace(alpha, max_r, count):
+        chord_l = math.sqrt(4 * alpha * i -  2 * alpha * alpha)
+        sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
+        pts = list(itertools.chain.from_iterable(sample))
+        print("Grid Directional radius = {0:.4f} : {1:.4f} ".format(i, len(pts) / len(trajectories)))
+
+
+    sample = [pyscan.grid_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
+    pts = list(itertools.chain.from_iterable(sample))
+    print("Grid : {0:.2f}".format(len(pts) / len(trajectories)))
+
+    sample = [pyscan.halfplane_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
+    pts = list(itertools.chain.from_iterable(sample))
+    print("Halfplane : {0:.2f}".format(len(pts) / len(trajectories)))
+
+    sample = [pyscan.dp_compress(traj, alpha) for traj in trajectories]
+    pts = list(itertools.chain.from_iterable(sample))
+    print("DP : {0:.2f}".format(len(pts) / len(trajectories)))
+
+    sample = [pyscan.lifting_kernel(pyscan.dp_compress(traj, alpha), .01) for traj in trajectories]
+    pts = list(itertools.chain.from_iterable(sample))
+    print("Lifting : {0:.2f}".format(len(pts) / len(trajectories)))
+
+    # sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
+    # sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
+
+    # ax = plt.subplot()
+    # ax.scatter([x[0] for x in pts], [x[1] for x in pts], c="r")
+    # ax.set_xlim(0, 1.0)
+    # ax.set_ylim(0, 1.0)
+    # plt.show()
+
+def test_halfspace_error(trajectories, core_sets):
+
+    for (traj, traj_approx) in zip(trajectories, core_sets):
+        (reg, curr_error) = pyscan.coreset_error_halfplane(traj, traj_approx)
+        yield curr_error
+
+def post_process_error(point_set):
+    lset = list(point_set)
+    return sorted(lset)[int(.9 * len(lset))]
+
+def test_disk_error(trajectories, core_sets, min_radius, max_radius):
+    for (traj, traj_approx) in zip(trajectories, core_sets):
+        (reg, curr_error) = pyscan.coreset_error_disk(traj, .01, min_radius, max_radius, traj_approx)
+        print(curr_error)
+        yield curr_error
+
+# def test_halfspace_error(trajectories, core_sets):
+#     max_error = 0
+#     for (traj, traj_approx) in zip(trajectories, core_sets):
+#         max_error = max(pyscan.coreset_error_halfplane(traj, traj_approx), max_error)
+#     return max_error
+
+
+def testing_geometric_error(trajectories, alpha, max_r, count):
+    random.shuffle(trajectories)
+    trajectories = trajectories[:30]
+    for i in np.linspace(alpha, max_r, count):
+        chord_l = math.sqrt(4 * alpha * i -  2 * alpha * alpha)
+        sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
+        print("Grid Direc Error {} {}".format(50 * i, 50 * post_process_error(test_halfspace_error(trajectories, sample))))
+
+
+    sample = [pyscan.grid_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
+    print("Grid : {}".format(50 * post_process_error(test_halfspace_error(trajectories, sample))))
+
+    sample = [pyscan.halfplane_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
+    print("Halfplane : {}".format(50 * post_process_error(test_halfspace_error(trajectories, sample))))
+
+    sample = [pyscan.dp_compress(traj, alpha) for traj in trajectories]
+    print("DP Error: {}".format(50 * post_process_error(test_halfspace_error(trajectories, sample))))
+
+    # sample = [pyscan.lifting_kernel(pyscan.dp_compress(traj, alpha), .01) for traj in trajectories]
+    # pts = list(itertools.chain.from_iterable(sample))
+    # print("Lifting : {0:.2f}".format(len(pts) / len(trajectories)))
+
+#trajectories = paths.read_geolife_files(100)
+trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_10k_nw.tsv")
+
 #trajectories = clean(trajectories)
 #print(len(trajectories))
-plot_plane_full_trajectories(trajectories, .25, 1.0, 0.0)
+#plot_plane_full_trajectories(trajectories, .25, 1.0, 0.0)
 
+r=.05
+p =.5
+q= .9
+eps_r=.01
+testing_geometric_error(trajectories, 1/500, 1/50, 5)
+#plot_partial_trajectories(trajectories, r, p, q, eps_r)

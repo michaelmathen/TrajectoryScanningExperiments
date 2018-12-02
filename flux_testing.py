@@ -17,8 +17,10 @@ def testing_flux_framework(
         eps_r=.01,
         r=.04,
         q=.2,
+        planted_points=None,
         disc_name="disc",
         region_name="disk",
+
         input_size=10000):
 
 
@@ -50,11 +52,14 @@ def testing_flux_framework(
             disc = utils.disc_to_func(disc_name)
             scan = utils.range_to_func(region_name)
             st = time.time()
-            red, blue = pyscan.paired_plant_region(st_pts, end_pts, r, q, eps_r, scan)
+            if planted_points is None:
+                red, blue, _ = pyscan.paired_plant_region(st_pts, end_pts, r, q, eps_r, scan)
+            else:
+                red, blue = planted_points
 
-            plt.scatter([x[0] for x in red], [x[1] for x in red], c="r")
-            plt.scatter([x[0] for x in blue], [x[1] for x in blue], c="b")
-            plt.show()
+            # plt.scatter([x[0] for x in red], [x[1] for x in red], c="r")
+            # plt.scatter([x[0] for x in blue], [x[1] for x in blue], c="b")
+            # plt.show()
 
             et = time.time()
             print("Time to plant region {}".format(et - st))
@@ -65,8 +70,7 @@ def testing_flux_framework(
             net_set = pyscan.my_sample(red, n) + pyscan.my_sample(blue, n)
             m_sample = [pyscan.WPoint(1.0, p[0], p[1], 1.0) for p in pyscan.my_sample(red, s)]
             b_sample = [pyscan.WPoint(1.0, p[0], p[1], 1.0) for p in pyscan.my_sample(blue, s)]
-            print(len(net_set), len(m_sample), len(b_sample))
-
+            print(scan)
             reg, mx = scan(net_set, m_sample, b_sample, disc)
             end_time = time.time()
 
@@ -84,15 +88,26 @@ def testing_flux_framework(
                    "m_disc_approx": mx,
                    "m_disc": actual_mx}
             writer.writerow(row)
+            f.flush()
             print(row)
+
 
 if __name__ == "__main__":
 
-    trajectories = paths.read_geolife_files(1000)
+    trajectories = paths.read_geolife_files(10000)
     st_pts, end_pts = pyscan.trajectories_to_flux(trajectories)
-    print (st_pts, end_pts)
     st_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in st_pts]
     end_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in end_pts]
-    print(st_pts)
-    for region in ["disk"]:
-        testing_flux_framework(st_pts, end_pts, -1, -3, 10, r=.1, q=0.0, region_name=region)
+
+    r=.01
+    q=.8
+    eps_r=.01
+
+
+    for region_name in ["disk", "halfplane"]:
+        scan_f = utils.range_to_func(region_name)
+        print("Started planting")
+        red, blue, region = pyscan.paired_plant_region(st_pts, end_pts, r, q, eps_r, scan_f)
+
+        print("got here")
+        testing_flux_framework(st_pts, end_pts, -1, -2, 40, r=r, q=q, region_name=region_name, planted_points=(red, blue))

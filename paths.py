@@ -274,6 +274,25 @@ def read_geolife_files(count):
     return normed_traces
 
 
+def read_dong_csv(fname):
+    traj_id_set = {}
+    with open(fname) as f:
+        for row in csv.reader(f, delimiter=" "):
+            try:
+                if row[0] not in traj_id_set:
+                    traj_id_set[row[0]] = []
+                if math.isnan(float(row[1])) or math.isinf(float(row[1])):
+                    continue
+                if math.isnan(float(row[2])) or math.isinf(float(row[2])):
+                    continue
+                traj_id_set[row[0]].append((float(row[1]), float(row[2])))
+
+            except ValueError:
+                continue
+        return normalize_all([traj_id_set[id] for id in traj_id_set])
+
+
+
 # for waypoint in gpx.waypoints:
 #     print 'waypoint {0} -> ({1},{2})'.format( waypoint.name, waypoint.latitude, waypoint.longitude )
 #
@@ -304,7 +323,6 @@ def traj_to_labels(traj):
         ix += 1
     return pts, labels
 
-print(sum(1 for f in all_files("/data/Trajectory_Sets/cabspottingdata")))
 
 
 if __name__ == "__main__":

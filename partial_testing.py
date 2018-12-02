@@ -21,7 +21,8 @@ def testing_partial_framework(
         region_name="disk",
         sample_method="block",
         planted_points=None,
-        input_size=10000):
+        input_size=10000,
+        fast_halfplane = False):
 
     """
     How do I convert the trajectories over?
@@ -42,7 +43,10 @@ def testing_partial_framework(
     :param input_size:
     :return:
     """
-    output_file = "{}_{}_{}_partial_discrepancy.csv".format(disc_name, region_name, sample_method)
+    if fast_halfplane:
+        output_file = "Fast_{}_{}_{}_partial_discrepancy.csv".format(disc_name, region_name, sample_method)
+    else:
+        output_file = "{}_{}_{}_partial_discrepancy.csv".format(disc_name, region_name, sample_method)
 
     fieldnames = ["vparam", "input_size", "disc", "region", "n", "s", "r", "p", "q", "time",
                   "m_disc",
@@ -81,7 +85,7 @@ def testing_partial_framework(
             et = time.time()
             print("Time to plant region {}".format(et - st))
 
-            start_time = time.time()
+
             if sample_method == "block":
                 m_sample = pyscan.block_sample(red, s, False)
                 b_sample = pyscan.block_sample(blue, s, False)
@@ -103,6 +107,7 @@ def testing_partial_framework(
 
             net_set = net_set1 + net_set2
 
+            start_time = time.time()
             # def plot_tuples(ax, pts, c):
             #     xs = []
             #     ys = []
@@ -125,7 +130,6 @@ def testing_partial_framework(
             print(s_prime)
             m_sample_prime = pyscan.uniform_sample(red, s_prime, False)
             b_sample_prime = pyscan.uniform_sample(blue, s_prime, False)
-            #print(m_sample_prime)
             actual_mx = pyscan.evaluate_range(reg, pyscan.to_weighted(m_sample_prime), pyscan.to_weighted(b_sample_prime), disc)
 
             row = {"vparam": vparam,
@@ -143,22 +147,23 @@ def testing_partial_framework(
 
 if __name__ == "__main__":
 
-    trajectories = paths.read_geolife_files(10000)
-
+    #trajectories = paths.read_geolife_files(100)
+    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_1m.tsv")
+    print(len(trajectories))
     r = .01
     q = .2
     p = .5
     eps_r = .001
     disc = utils.disc_to_func("disc")
-    for region_name in ["halfplane"]:
+    for region_name in ["disk"]:
         if region_name == "disk":
-            red, blue, _ = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
+            red, blue, _, _ = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
         elif region_name == "halfplane":
-            red, blue, _ = pyscan.plant_partial_halfplane(trajectories, r, p, q, eps_r, disc)
+            red, blue, _, _ = pyscan.plant_partial_halfplane(trajectories, r, p, q, eps_r, disc)
 
-        for sample in ["uniform", "block", "even"]:
+        for sample in ["block", "even", "uniform"]:
             disc = utils.disc_to_func("disc")
-
-
-            testing_partial_framework(trajectories, -1, -2, 40, r=.01, q=0.1, region_name=region_name,
-                                      sample_method=sample, planted_points=(red, blue))
+            testing_partial_framework(trajectories, -1, -2, 40, r=r, q=q, p=p,
+                                    region_name=region_name,
+                                    sample_method=sample,
+                                    planted_points=(red, blue), fast_halfplane=False)
