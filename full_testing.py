@@ -9,26 +9,69 @@ import itertools
 import math
 
 
+def multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net, fast_disk):
+
+    mx = -1
+    curr_disk_r = min_disk_r
+    reg = None
+    while curr_disk_r < max_disk_r:
+
+        chord_l = math.sqrt(4 * alpha * curr_disk_r - 2 * alpha * alpha)
+        m_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in red_sample]
+        b_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in blue_sample]
+        pt_net = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in net]
+        m_sample = list(pyscan.trajectories_to_labels(m_sample))
+        b_sample = list(pyscan.trajectories_to_labels(b_sample))
+        net_set = list(pyscan.trajectories_to_labels(pt_net))
+        #net_set = list(itertools.chain.from_iterable(pt_net))
+
+
+        new_reg, new_mx = pyscan.max_disk_scale_labeled(net_set, m_sample, b_sample, fast_disk, curr_disk_r, disc)
+        #print("Finished")
+        #print("Should match {} {}".format(new_mx, pyscan.evaluate_range(new_reg, m_sample, b_sample, disc)))
+        if new_mx > mx:
+            reg = new_reg
+            mx = new_mx
+        curr_disk_r *= 2
+    return reg, mx
+
+
+def multiscale_disk_fixed(min_disk_r, max_disk_r, red_sample, blue_sample, net, fast_disk):
+
+
+    m_sample = list(pyscan.trajectories_to_labels(red_sample))
+    b_sample = list(pyscan.trajectories_to_labels(blue_sample))
+    net_set = list(pyscan.trajectories_to_labels(net))
+    #net_set = list(itertools.chain.from_iterable(net))
+
+    mx = -1
+    curr_disk_r = min_disk_r
+    reg = None
+    while curr_disk_r < max_disk_r:
+        #print(net_set)
+        new_reg, new_mx = pyscan.max_disk_scale_labeled(net_set, m_sample, b_sample, fast_disk, curr_disk_r, disc)
+        if new_mx > mx:
+            reg = new_reg
+            mx = new_mx
+        curr_disk_r *= 2
+    return reg, mx
+
+
 def testing_full_framework(
-        trajectories,
+        red, blue,
+        output_file,
         l_s, h_s, count,
         vparam="eps",
         eps=.01,
-        eps_r=.01,
-        r=.04,
-        p=0.5,
-        q=.2,
         alpha=.01,
-        error_thresh=3,
-        planted_points=None,
         max_disk_r=.1,
         min_disk_r=.05,
-        max_w = .1,
         disc_name="disc",
         region_name="halfplane",
         sample_method="halfplane",
-        input_size=10000,
-        prefix=""):
+        fast_disk = True,
+        two_level_sample=True,
+        max_time=None):
 
     """
     How do I convert the trajectories over?
@@ -49,11 +92,9 @@ def testing_full_framework(
     :param input_size:
     :return:
     """
-    output_file = "{5}_{0}_{1}_{2}_{3:.2f}_{4:.2f}_full_discrepancy.csv".format(disc_name, region_name, sample_method, min_disk_r,max_disk_r, prefix)
 
-    fieldnames = ["vparam", "input_size", "disc", "region", "n", "s", "r", "p", "q", "alpha", "time",
-                  "m_disc", "n_pts", "sample_size",
-                  "m_disc_approx", "sample_method"]
+    fieldnames = ["vparam", "disc", "region", "n", "s", "r", "p", "q", "alpha", "time",
+                  "m_disc", "m_disc_approx", "sample_method"]
     with open(output_file, 'w') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -62,10 +103,8 @@ def testing_full_framework(
 
             if vparam == "eps":
                 eps = i
-            elif vparam == "r":
-                r = i
-            elif vparam == "q":
-                q = i
+            elif vparam == "alpha":
+                alpha = i
             n = 1 / eps
             s = 1 / (2 * eps * eps)
             n = int(round(n) + .1)
@@ -73,113 +112,81 @@ def testing_full_framework(
 
             disc = utils.disc_to_func(disc_name)
 
-            if planted_points is None:
-                if "disk" in region_name or "rectangle" in region_name:
-                    red, blue, _, actual_mx = pyscan.plant_full_disk(trajectories, r, p, q, disc)
-                elif region_name == "halfplane":
-                    red, blue, _, actual_mx = pyscan.plant_full_halfplane(trajectories, r, p, q, disc)
-            else:
-                red, blue = planted_points
-
-
             red_sample = pyscan.my_sample(red, s)
             blue_sample = pyscan.my_sample(blue, s)
-            red_net = pyscan.my_sample(red, n)
-            blue_net = pyscan.my_sample(blue, n)
+            if two_level_sample:
+                red_net = pyscan.my_sample(red, n)
+                blue_net = pyscan.my_sample(blue, n)
+            else:
+                red_net = red_sample
+                blue_net = blue_sample
+
             net = red_net + blue_net
 
             print("Running: {} {}".format(n, s))
+
             start_time = time.time()
 
-            if sample_method == "halfplane":
-                m_sample = [pyscan.halfplane_kernel([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj], alpha) for traj in red_sample]
-                b_sample = [pyscan.halfplane_kernel([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj], alpha) for traj in blue_sample]
-                pt_net = [pyscan.halfplane_kernel([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj], alpha) for traj in net]
-            elif sample_method == "grid":
-                m_sample = [pyscan.grid_kernel(traj, alpha) for traj in red_sample]
-                b_sample  = [pyscan.grid_kernel(traj, alpha) for traj in blue_sample]
-                pt_net = [pyscan.grid_kernel(traj, alpha) for traj in net]
-            elif sample_method == "grid_direc":
-                chord_l = math.sqrt(4 * alpha * min_disk_r - 2 * alpha * alpha)
-                m_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in red_sample]
-                b_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in blue_sample]
-                pt_net = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in net]
-            elif sample_method == "lifting":
-                m_sample = [pyscan.lifting_kernel(traj, alpha) for traj in red_sample]
-                b_sample = [pyscan.lifting_kernel(traj, alpha) for traj in blue_sample]
-                pt_net = [pyscan.lifting_kernel(traj, alpha) for traj in net]
-            elif sample_method == "dp":
-                m_sample = [pyscan.dp_compress(traj, alpha) for traj in red_sample]
-                b_sample = [pyscan.dp_compress(traj, alpha) for traj in blue_sample]
-                pt_net = [pyscan.dp_compress(traj, alpha) for traj in net]
+            if region_name == "multiscale_disk":
+                reg, mx = multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net, fast_disk)
             else:
-                print("Undefined sample method")
-                return
+                if sample_method == "halfplane":
+                    m_sample = [pyscan.halfplane_kernel([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj], alpha) for traj in red_sample]
+                    b_sample = [pyscan.halfplane_kernel([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj], alpha) for traj in blue_sample]
+                    pt_net = [pyscan.halfplane_kernel([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj], alpha) for traj in net]
+                elif sample_method == "dp":
+                    m_sample = [pyscan.dp_compress(traj, alpha) for traj in red_sample]
+                    b_sample = [pyscan.dp_compress(traj, alpha) for traj in blue_sample]
+                    pt_net = [pyscan.dp_compress(traj, alpha) for traj in net]
+                elif sample_method is None:
+                    #just takes the waypoints.
+                    m_sample = [[pyscan.Point(pt[0], pt[1], 1.0) for pt in traj] for traj in red_sample]
+                    b_sample = [[pyscan.Point(pt[0], pt[1], 1.0) for pt in traj] for traj in blue_sample]
+                    pt_net = [[pyscan.Point(pt[0], pt[1], 1.0) for pt in traj] for traj in net]
+                elif sample_method == "grid":
+                    m_sample = [pyscan.grid_kernel(traj, alpha) for traj in red_sample]
+                    b_sample = [pyscan.grid_kernel(traj, alpha) for traj in blue_sample]
+                    pt_net = [pyscan.grid_kernel(traj, alpha) for traj in net]
+                elif sample_method == "lifting":
+                    m_sample = [pyscan.lifting_kernel(traj, alpha) for traj in red_sample]
+                    b_sample = [pyscan.lifting_kernel(traj, alpha) for traj in blue_sample]
+                    pt_net = [pyscan.lifting_kernel(traj, alpha) for traj in net]
+                elif sample_method == "grid_direc":
+                    chord_l = math.sqrt(4 * alpha * min_disk_r - 2 * alpha * alpha)
+                    m_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in
+                                red_sample]
+                    b_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in
+                                blue_sample]
+                    pt_net = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in net]
+                elif sample_method == "even":
+                    m_sample = [pyscan.even_sample_error(traj, alpha, False) for traj in red_sample]
+                    b_sample = [pyscan.even_sample_error(traj, alpha, False) for traj in blue_sample]
+                    pt_net = [pyscan.even_sample_error(traj, alpha, False) for traj in net]
+                else:
+                    return
 
-            m_sample = list(pyscan.trajectories_to_labels(m_sample))
-            b_sample = list(pyscan.trajectories_to_labels(b_sample))
-            net_set = list(itertools.chain.from_iterable(pt_net))
-            print("Points per trajectory {} {} {}".format(len(m_sample) / s, len(b_sample) / s, len(net_set) / n))
-            print("Total Points {} {} {}".format(len(m_sample), len(b_sample), len(net_set)))
+                if region_name == "multiscale_disk_fixed":
+                    reg, mx = multiscale_disk_fixed(min_disk_r, max_disk_r, m_sample, b_sample, pt_net, fast_disk)
+                else:
+                    m_sample = list(pyscan.trajectories_to_labels(m_sample))
+                    b_sample = list(pyscan.trajectories_to_labels(b_sample))
+                    net_set = list(itertools.chain.from_iterable(pt_net))
+                    if region_name == "halfplane":
+                        reg, mx = pyscan.max_halfplane_labeled(net_set, m_sample, b_sample, disc)
+                    elif region_name == "disk":
+                        reg, mx = pyscan.max_disk_labeled(net_set, m_sample, b_sample, disc)
+                    elif region_name == "rectangle":
+                        reg, mx = pyscan.max_rect_labeled(2 * n, max_disk_r, m_sample, b_sample, disc)
+                    else:
+                        return
 
-            if region_name == "halfplane":
-                reg, mx = pyscan.max_halfplane_labeled(net_set, m_sample, b_sample, disc)
-            elif region_name == "disk":
-                reg, mx = pyscan.max_disk_labeled(net_set, m_sample, b_sample, disc)
-            elif region_name == "small_disk":
-                #net_set = list(pyscan.trajectories_to_labels(pt_net))
-                mx = -1
-                curr_disk_r = min_disk_r
-                reg = None
-                while curr_disk_r < max_disk_r:
-                    new_reg, new_mx = pyscan.max_disk_scale_labeled_alt(net_set, m_sample, b_sample, -1, curr_disk_r, disc)
-                    if new_mx > mx:
-                        reg = new_reg
-                        mx = new_mx
-                    curr_disk_r *= 2
-
-            elif region_name == "rectangle":
-                reg, mx = pyscan.max_rect_labeled(2 * n, max_w, m_sample, b_sample, disc)
-            else:
-                print("Undefined region_name")
-                return
 
             end_time = time.time()
-            if "disk" in region_name:
-                red_w = 0
-                red_total = 0
-                for traj in red:
-                    if pyscan.Trajectory(traj).intersects_disk(reg):
-                        red_w += 1
-                    red_total += 1
-                blue_w = 0
-                blue_total = 0
-                for traj in blue:
-                    if pyscan.Trajectory(traj).intersects_disk(reg):
-                        blue_w += 1
-                    blue_total += 1
-            elif "halfplane" in region_name:
-                red_w = 0
-                red_total = 0
-                for traj in red:
-                    if pyscan.Trajectory(traj).intersects_halfplane(reg):
-                        red_w += 1
-                    red_total += 1
-                blue_w = 0
-                blue_total = 0
-                for traj in blue:
-                    if pyscan.Trajectory(traj).intersects_halfplane(reg):
-                        blue_w += 1
-                    blue_total += 1
-            else:
-                return
-
-            actual_mx = pyscan.evaluate(disc, red_w, red_total, blue_w, blue_total)
+            actual_mx = pyscan.evaluate_range_trajectory(reg, red, blue, disc)
             row = {"vparam": vparam,
-                   "input_size": input_size,
                    "disc": disc_name,
                    "region": region_name,
-                   "n": n, "s": s, "n_pts":len(net_set), "sample_size": len(m_sample) + len(b_sample),
+                   "n": n, "s": s,
                    "r": r, "q": q,"p":p,
                    "alpha":alpha,
                    "time": end_time - start_time,
@@ -189,11 +196,32 @@ def testing_full_framework(
             writer.writerow(row)
             f.flush()
             print(row)
+            if max_time is not None and end_time - start_time > max_time:
+                return
+
+
+def generate_disk_sets(fname, r, p, q, min_r, max_r):
+
+    disc = utils.disc_to_func("disc")
+    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
+
+    while True:
+        red, blue, planted_reg , planted_mx = pyscan.plant_full_disk(trajectories, r, p, q, disc)
+        print(min_r, planted_reg.get_radius(), max_r)
+        if min_r < planted_reg.get_radius() < max_r:
+            break
+    return red, blue
+
+def generate_halfplane_sets(fname, r, p, q):
+    disc = utils.disc_to_func("disc")
+    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
+    red, blue, planted_reg, planted_mx = pyscan.plant_full_halfplane(trajectories, r, p, q, disc)
+    return red, blue
 
 
 if __name__ == "__main__":
 
-    for fname in ["osm_eu_sample_10k_nw", "osm_eu_sample_100k_nw", "osm_eu_sample_1m_nw"]:
+    for fname in ["osm_eu_sample_100k_nw"]:
 
         trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
         print(len(trajectories))
@@ -203,33 +231,19 @@ if __name__ == "__main__":
         q = .2
         #bjtax is 1/500 and 1/50
         #osm is 1/6000 and 1/300
-        alpha = 1/6000
-        max_r = 1/300
-        min_r = alpha
-        disc = utils.disc_to_func("disc")
-        for region_name, sample_method in [("small_disk", "grid_direc")]:
-            if "disk" in region_name or "rectangle" in region_name:
-                count = 0
-                while count < 10:
-                    red, blue, reg ,actual_mx = pyscan.plant_full_disk(trajectories, r, p, q, disc)
-                    print(min_r, reg.get_radius(), max_r)
-                    if min_r < reg.get_radius() < max_r:
-                        break
-                    else:
-                        count += 1
-                if count == 10:
-                    import sys
-                    print("region is too small or big")
-                    sys.exit()
-            elif region_name == "halfplane":
-                red, blue, _, actual_mx = pyscan.plant_full_halfplane(trajectories, r, p, q, disc)
-            print(actual_mx)
-            #for min_r in np.linspace(alpha, max_r, 1):
-            testing_full_framework(trajectories, -1, -3, 10, r=r, q=q, p=p, region_name=region_name,
-                           sample_method=sample_method,
-                            alpha=alpha,
-                           planted_points=(red,blue),
-                           prefix=fname,
-                           min_disk_r = min_r,
-                           max_disk_r = max_r)
-            print(actual_mx)
+        #alpha = 1/6000
+        #max_r = 1/50
+        alpha = 1 / 500
+        max_r = 1 / 50
+        c = 0
+        for region, two_l_samp, sample_method, fast_disk in [("disk", False, "grid", False), ("disk", True, "grid", False), ("disk", True, "grid_direc", False)]:
+        #for min_r in np.linspace(alpha, max_r, 1):
+            testing_full_framework("partial_progression_{}.csv".format(c), -.1, -3, 80, r=r, q=q, p=p, region_name=region_name,
+                       sample_method=sample_method,
+                        alpha=alpha,
+                        two_level_sample=two_l_samp,
+                       min_disk_r = min_r,
+                       max_disk_r = max_r,
+                      max_time=200)
+            c += 1
+            print(planted_mx)

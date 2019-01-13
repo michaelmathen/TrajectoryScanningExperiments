@@ -94,7 +94,8 @@ def testing_flux_framework(
 
 if __name__ == "__main__":
 
-    trajectories = paths.read_geolife_files(10000)
+    #trajectories = paths.read_geolife_files(10000)
+    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/osm_eu_sample_100k_nw.tsv")
     st_pts, end_pts = pyscan.trajectories_to_flux(trajectories)
     st_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in st_pts]
     end_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in end_pts]
@@ -104,10 +105,10 @@ if __name__ == "__main__":
     eps_r=.01
 
 
-    for region_name in ["disk", "halfplane"]:
+    for region_name in ["halfplane", "disk"]:
         scan_f = utils.range_to_func(region_name)
         print("Started planting")
         red, blue, region = pyscan.paired_plant_region(st_pts, end_pts, r, q, eps_r, scan_f)
 
         print("got here")
-        testing_flux_framework(st_pts, end_pts, -1, -2, 40, r=r, q=q, region_name=region_name, planted_points=(red, blue))
+        testing_flux_framework(st_pts, end_pts, -1, -3, 40, r=r, q=q, region_name=region_name, planted_points=(red, blue))

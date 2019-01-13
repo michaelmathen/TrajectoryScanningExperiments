@@ -17,19 +17,28 @@ def plot_tuples(ax, pts, c):
     ax.scatter(xs, ys, color=c, marker='.')
 
 
+def plot_line(ax, pts, c):
+    xs = []
+    ys = []
+    for pt in pts:
+        xs.append(pt[0])
+        ys.append(pt[1])
+    ax.plot(xs, ys, color=c)
+
+
 def plot_partial_trajectories(trajectories, r, p, q, eps_r):
     disc = utils.disc_to_func("disc")
     red, blue, mx_disk, _ = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
 
     ax = plt.subplot()
     rpts = list(itertools.chain.from_iterable([traj.get_pts() for traj in red]))
-    rpts = random.sample(rpts, 400)
+    rpts = random.sample(rpts, 500)
 
     plot_tuples(ax, list(rpts), "r")
 
 
     bpts = list(itertools.chain.from_iterable([traj.get_pts() for traj in blue]))
-    bpts = random.sample(bpts, 400)
+    bpts = random.sample(bpts, 500)
     plot_tuples(ax, bpts, "b")
 
     actor = plt.Circle((mx_disk.get_origin()[0], mx_disk.get_origin()[1]), mx_disk.get_radius(), edgecolor="k", linewidth=2, fill=False)
@@ -60,24 +69,47 @@ def plot_full_trajectories(trajectories, r, p, q):
     plt.show()
 
 
+def plot_full_trajectories_intersection_check(trajectories, r):
+    disc = utils.disc_to_func("disc")
+    red, blue, mx_disk, _ = pyscan.plant_full_disk(trajectories, r, .5, .5, disc)
+
+    #mx_disk = pyscan.Disk(mx_disk.get_origin()[0], mx_disk.get_origin()[1],  .01)
+    ax = plt.subplot()
+
+    blue_c = 0
+    for traj in trajectories:
+        if pyscan.Trajectory(traj).intersects_disk(mx_disk):
+            blue_c += 1
+            plot_line(ax, traj, "b")
+        else:
+             plot_line(ax, traj, "r")
+    print(blue_c / len(trajectories), r)
+
+    actor = plt.Circle((mx_disk.get_origin()[0], mx_disk.get_origin()[1]), mx_disk.get_radius())
+    print(mx_disk.get_origin(), mx_disk.get_radius())
+    ax.plot(mx_disk.get_origin()[0], mx_disk.get_origin()[1], marker='o')
+    ax.add_artist(actor)
+    plt.show()
+
 
 def plot_plane_partial_trajectories(trajectories, r, p, q, eps_r):
     disc = utils.disc_to_func("disc")
     red, blue, mx_plane, _ = pyscan.plant_partial_halfplane(trajectories, r, p, q, eps_r, disc)
 
 
+    print(len(red), len(blue))
     ax = plt.subplot()
     for traj in red:
         plot_tuples(ax, traj.get_pts(), "r")
 
     for traj in blue:
         plot_tuples(ax, traj.get_pts(), "b")
+
     xs = np.arange(0, 1, .01)
-
-
     ys = (-1 - mx_plane.get_coords()[0] * xs) * 1 / mx_plane.get_coords()[1]
     ax.plot(xs, ys, color="g")
     plt.show()
+
 
 def plot_plane_flux_trajectories(trajectories, r, q, eps_r):
 
@@ -186,7 +218,7 @@ def post_process_error(point_set):
 
 def test_disk_error(trajectories, core_sets, min_radius, max_radius):
     for (traj, traj_approx) in zip(trajectories, core_sets):
-        (reg, curr_error) = pyscan.coreset_error_disk(traj, .01, min_radius, max_radius, traj_approx)
+        (reg, curr_error) = pyscan.coreset_error_disk(traj, min_radius, max_radius, traj_approx)
         print(curr_error)
         yield curr_error
 
@@ -219,16 +251,39 @@ def testing_geometric_error(trajectories, alpha, max_r, count):
     # pts = list(itertools.chain.from_iterable(sample))
     # print("Lifting : {0:.2f}".format(len(pts) / len(trajectories)))
 
-#trajectories = paths.read_geolife_files(100)
-trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_10k_nw.tsv")
+def testing_disk_geometric_error(trajectories, alpha, max_r, count):
+    random.shuffle(trajectories)
+    trajectories = trajectories[:30]
+    for i in np.linspace(alpha, max_r, count):
+        chord_l = math.sqrt(4 * alpha * i -  2 * alpha * alpha)
+        sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
+        print("Grid Direc Error {} {}".format(50 * i, 50 * post_process_error(test_disk_error(trajectories, sample, alpha, max_r))))
+
+
+    sample = [pyscan.grid_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
+    print("Grid : {}".format(50 * post_process_error(test_disk_error(trajectories, sample, alpha, max_r))))
+
+    sample = [pyscan.halfplane_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
+    print("Halfplane : {}".format(50 * post_process_error(test_disk_error(trajectories, sample, alpha, max_r))))
+
+    sample = [pyscan.dp_compress(traj, alpha) for traj in trajectories]
+    print("DP Error: {}".format(50 * post_process_error(test_disk_error(trajectories, sample, alpha, max_r))))
+
+trajectories = paths.read_geolife_files(1000)
+#trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_10k_nw.tsv")
 
 #trajectories = clean(trajectories)
 #print(len(trajectories))
 #plot_plane_full_trajectories(trajectories, .25, 1.0, 0.0)
 
-r=.05
+r=.1
 p =.5
-q= .9
+q= 1.0
 eps_r=.01
-testing_geometric_error(trajectories, 1/500, 1/50, 5)
+
+#plot_full_trajectories_intersection_check(trajectories, r)
+
+#testing_disk_geometric_error(trajectories,.1, .01, 5)
 #plot_partial_trajectories(trajectories, r, p, q, eps_r)
+plot_plane_partial_trajectories(trajectories, r, p, q, eps_r)
+

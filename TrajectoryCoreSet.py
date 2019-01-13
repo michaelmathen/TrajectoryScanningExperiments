@@ -36,7 +36,7 @@ def boxed_trajectory(count):
     Creates a trajectory constrained to a box
     :return:
     """
-    random.seed(2)
+    #random.seed(2)
     st_pt = (0.0,0.0)
     pts = [st_pt]
     for i in range(count):
@@ -74,6 +74,8 @@ def full_coreset_example(point_count, alpha, method, min_r=None):
         core_set_pts = pyscan.grid_direc_kernel(pts, chord_l, alpha)
     elif method == "kernel":
         core_set_pts = pyscan.halfplane_kernel(pts, alpha)
+    elif method == "graham":
+        core_set_pts = pyscan.hull(pts)
     elif method == "dp":
         core_set_pts = pyscan.dp_compress(pts, alpha)
     else:
@@ -108,7 +110,7 @@ for method in ["even", "block", "uniform"]:
     plt.savefig(method + "_partial.pdf")
     plt.clf()
 
-for method in ["lifting", "grid", "grid_alt", "grid_direc", "kernel", "dp"]:
+for method in ["lifting", "grid", "grid_alt", "grid_direc", "kernel", "dp", "graham"]:
     full_coreset_example(20, .1, method, min_r=.1)
     plt.savefig(method + "_full.pdf")
     plt.clf()

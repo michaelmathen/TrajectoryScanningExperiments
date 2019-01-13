@@ -58,6 +58,7 @@ if __name__ == "__main__":
             #p2, = ax.plot(r_fs, time_fs, color='b', label='SubSumScan')
 
     ax.legend()
+    ax.set_ybound([0, None])
     ax.set_xlabel(args.x_name)
     ax.set_ylabel(args.y_name)
     plt.tight_layout()
