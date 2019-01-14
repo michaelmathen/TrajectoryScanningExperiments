@@ -67,6 +67,8 @@ def full_coreset_example(point_count, alpha, method, min_r=None):
         core_set_pts = pyscan.lifting_kernel(pts, math.sqrt(alpha))
     elif method == "grid":
         core_set_pts = pyscan.grid_kernel(pts, alpha)
+    elif method == "even":
+        core_set_pts = pyscan.even_sample_error(pts, alpha, False)
     elif method =="grid_alt":
         core_set_pts = pyscan.grid_trajectory(pts, alpha)
     elif method == "grid_direc":
@@ -110,7 +112,7 @@ for method in ["even", "block", "uniform"]:
     plt.savefig(method + "_partial.pdf")
     plt.clf()
 
-for method in ["lifting", "grid", "grid_alt", "grid_direc", "kernel", "dp", "graham"]:
+for method in ["lifting", "grid", "even", "grid_alt", "grid_direc", "kernel", "dp", "graham"]:
     full_coreset_example(20, .1, method, min_r=.1)
     plt.savefig(method + "_full.pdf")
     plt.clf()

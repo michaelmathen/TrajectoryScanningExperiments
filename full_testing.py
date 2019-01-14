@@ -9,7 +9,7 @@ import itertools
 import math
 
 
-def multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net, fast_disk):
+def multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net, disc, fast_disk):
 
     mx = -1
     curr_disk_r = min_disk_r
@@ -36,12 +36,9 @@ def multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net,
     return reg, mx
 
 
-def multiscale_disk_fixed(min_disk_r, max_disk_r, red_sample, blue_sample, net, fast_disk):
+def multiscale_disk_fixed(min_disk_r, max_disk_r, m_sample, b_sample, net_set, disc, fast_disk):
 
 
-    m_sample = list(pyscan.trajectories_to_labels(red_sample))
-    b_sample = list(pyscan.trajectories_to_labels(blue_sample))
-    net_set = list(pyscan.trajectories_to_labels(net))
     #net_set = list(itertools.chain.from_iterable(net))
 
     mx = -1
@@ -93,7 +90,7 @@ def testing_full_framework(
     :return:
     """
 
-    fieldnames = ["vparam", "disc", "region", "n", "s", "r", "p", "q", "alpha", "time",
+    fieldnames = ["vparam", "disc", "region", "n", "s", "n_pts", "m_pts", "b_pts", "alpha", "time",
                   "m_disc", "m_disc_approx", "sample_method"]
     with open(output_file, 'w') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -128,7 +125,8 @@ def testing_full_framework(
             start_time = time.time()
 
             if region_name == "multiscale_disk":
-                reg, mx = multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net, fast_disk)
+                reg, mx = multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net, disc, fast_disk)
+                m_sample, b_sample, net_set = [], [], []
             else:
                 if sample_method == "halfplane":
                     m_sample = [pyscan.halfplane_kernel([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj], alpha) for traj in red_sample]
@@ -138,6 +136,10 @@ def testing_full_framework(
                     m_sample = [pyscan.dp_compress(traj, alpha) for traj in red_sample]
                     b_sample = [pyscan.dp_compress(traj, alpha) for traj in blue_sample]
                     pt_net = [pyscan.dp_compress(traj, alpha) for traj in net]
+                elif sample_method == "hull":
+                    m_sample = [pyscan.convex_hull([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj]) for traj in red_sample]
+                    b_sample = [pyscan.convex_hull([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj]) for traj in blue_sample]
+                    pt_net = [pyscan.convex_hull([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj]) for traj in net]
                 elif sample_method is None:
                     #just takes the waypoints.
                     m_sample = [[pyscan.Point(pt[0], pt[1], 1.0) for pt in traj] for traj in red_sample]
@@ -166,7 +168,10 @@ def testing_full_framework(
                     return
 
                 if region_name == "multiscale_disk_fixed":
-                    reg, mx = multiscale_disk_fixed(min_disk_r, max_disk_r, m_sample, b_sample, pt_net, fast_disk)
+                    m_sample = list(pyscan.trajectories_to_labels(red_sample))
+                    b_sample = list(pyscan.trajectories_to_labels(blue_sample))
+                    net_set = list(pyscan.trajectories_to_labels(net))
+                    reg, mx = multiscale_disk_fixed(min_disk_r, max_disk_r, m_sample, b_sample, net_set, disc, fast_disk)
                 else:
                     m_sample = list(pyscan.trajectories_to_labels(m_sample))
                     b_sample = list(pyscan.trajectories_to_labels(b_sample))
@@ -176,10 +181,11 @@ def testing_full_framework(
                     elif region_name == "disk":
                         reg, mx = pyscan.max_disk_labeled(net_set, m_sample, b_sample, disc)
                     elif region_name == "rectangle":
-                        reg, mx = pyscan.max_rect_labeled(2 * n, max_disk_r, m_sample, b_sample, disc)
+                        reg, mx = pyscan.max_rect_labeled(n, max_disk_r, m_sample, b_sample, disc)
+                    elif region_name == "rectangle_scale":
+                        reg, mx = pyscan.max_rect_labeled(n, max_disk_r, alpha, net_set, m_sample, b_sample, disc)
                     else:
                         return
-
 
             end_time = time.time()
             actual_mx = pyscan.evaluate_range_trajectory(reg, red, blue, disc)
@@ -187,7 +193,7 @@ def testing_full_framework(
                    "disc": disc_name,
                    "region": region_name,
                    "n": n, "s": s,
-                   "r": r, "q": q,"p":p,
+                   "n_pts": len(net_set), "m_pts":len(m_sample), "b_pts":len(b_sample),
                    "alpha":alpha,
                    "time": end_time - start_time,
                    "m_disc_approx": mx,
@@ -219,31 +225,3 @@ def generate_halfplane_sets(fname, r, p, q):
     return red, blue
 
 
-if __name__ == "__main__":
-
-    for fname in ["osm_eu_sample_100k_nw"]:
-
-        trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
-        print(len(trajectories))
-
-        r = .05
-        p = .5
-        q = .2
-        #bjtax is 1/500 and 1/50
-        #osm is 1/6000 and 1/300
-        #alpha = 1/6000
-        #max_r = 1/50
-        alpha = 1 / 500
-        max_r = 1 / 50
-        c = 0
-        for region, two_l_samp, sample_method, fast_disk in [("disk", False, "grid", False), ("disk", True, "grid", False), ("disk", True, "grid_direc", False)]:
-        #for min_r in np.linspace(alpha, max_r, 1):
-            testing_full_framework("partial_progression_{}.csv".format(c), -.1, -3, 80, r=r, q=q, p=p, region_name=region_name,
-                       sample_method=sample_method,
-                        alpha=alpha,
-                        two_level_sample=two_l_samp,
-                       min_disk_r = min_r,
-                       max_disk_r = max_r,
-                      max_time=200)
-            c += 1
-            print(planted_mx)

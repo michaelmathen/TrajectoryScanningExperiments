@@ -17,10 +17,10 @@ if __name__ == "__main__":
         c = 0
 
         red, blue = full_testing.generate_disk_sets(fname, r, p, q, min_r, max_r)
-        for region, two_l_samp, sample_method, fast_disk in [("disk", True, "even", False), ("small_disk", True, "even", False), ("small_disk", True, "grid_direc", False), ("small_disk", True, "grid_direc", True)]:
+        for region, two_l_samp, sample_method, fast_disk in [("disk", True, "multiscale_disk", True), ("halfspace", True, "halfspace", True), ("rectangle_scale", True, "grid", True)]:
             full_testing.testing_full_framework(red, blue,
-                                                "full_disk_runtime_{}_{}_{}.csv".format(c, fname, region), -.1, -5, 80,
-                                                eps=.05,
+                                                "full_bc_runtime_{}_{}_{}.csv".format(c, fname, region), -.1, -5, 80,
+                                                eps=.025,
                                                 vparam="alpha",
                                                 region_name=region,
                                                 sample_method=sample_method,

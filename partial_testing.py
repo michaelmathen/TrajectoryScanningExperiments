@@ -1,8 +1,6 @@
 import csv
 import numpy as np
 import utils
-import paths
-import matplotlib.pyplot as plt
 import time
 import pyscan
 import math
@@ -105,6 +103,8 @@ def testing_partial_framework(
                 else:
                     reg = grid.toRectangle(s2)
                     mx = s2.fValue()
+            else:
+                return
 
             end_time = time.time()
 
@@ -124,32 +124,3 @@ def testing_partial_framework(
             if max_time is not None and end_time - start_time > max_time:
                 return
 
-if __name__ == "__main__":
-
-    #trajectories = paths.read_geolife_files(100)
-    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_100k.tsv")
-    print(len(trajectories))
-    r = .0025
-    q = .2
-    p = .5
-    eps_r = .001
-    region_name = "halfplane"
-    disc = utils.disc_to_func("disc")
-    if region_name == "disk":
-        red, blue, _, _ = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
-    elif region_name == "halfplane":
-        red, blue, _, _ = pyscan.plant_partial_halfplane(trajectories, r, p, q, eps_r, disc)
-    elif region_name == "rectangle":
-        red, blue, _, _ = pyscan.plant_partial_rectangle(trajectories, r, p, q, eps_r, disc)
-
-
-    for two_level_sample, ham_sand in [(True, True), (False, False), (True, False)]:
-
-        output_file = "partial_alg_progression_{}_{}_{}.csv".format(region_name, "2" if two_level_sample else "1", "ham" if ham_sand else "rand")
-        testing_partial_framework(output_file, trajectories, -1, -4, 80, r=r, q=q, p=p,
-                                region_name=region_name,
-                                  two_level_sample=two_level_sample,
-                                  ham_sample=ham_sand,
-                                sample_method="uniform",
-                                max_time=20,
-                                planted_points=(red, blue))
