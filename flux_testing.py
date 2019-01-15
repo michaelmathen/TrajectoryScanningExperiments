@@ -1,34 +1,26 @@
 import numpy as np
-import random
 import time
 import csv
 import pyscan
 import paths
 import utils
-import matplotlib.pyplot as plt
-
+import math
 
 
 def testing_flux_framework(
-        st_pts, end_pts,
+        output_file,
+        red, blue,
         l_s, h_s, count,
-        vparam="eps",
-        eps=.01,
-        eps_r=.01,
         r=.04,
         q=.2,
-        planted_points=None,
-        disc_name="disc",
         region_name="disk",
-
-        input_size=10000):
-
-
-    output_file = "{}_{}_flux_discrepancy.csv".format(disc_name, region_name)
+        two_level_sample=True,
+        ham_sample=False,
+        max_time=None):
 
 
-    
-    fieldnames = ["vparam", "input_size", "disc", "region", "n", "s", "r", "q", "time",
+
+    fieldnames = ["disc", "region", "n", "s", "r", "q", "time",
                   "m_disc",
                   "m_disc_approx"]
     with open(output_file, 'w') as f:
@@ -37,41 +29,51 @@ def testing_flux_framework(
 
         for i in np.logspace(l_s, h_s, count):
 
-            if vparam == "eps":
-                eps = i
-            elif vparam == "r":
-                r = i
-            elif vparam == "q":
-                q = i
-            print(eps)
+            eps = i
             n = 1 / eps
             s = 1 / (2 * eps * eps)
             n = int(round(n) + .1)
             s = int(round(s) + .1)
       
-            disc = utils.disc_to_func(disc_name)
-            scan = utils.range_to_func(region_name)
-            st = time.time()
-            if planted_points is None:
-                red, blue, _ = pyscan.paired_plant_region(st_pts, end_pts, r, q, eps_r, scan)
-            else:
-                red, blue = planted_points
-
-            # plt.scatter([x[0] for x in red], [x[1] for x in red], c="r")
-            # plt.scatter([x[0] for x in blue], [x[1] for x in blue], c="b")
-            # plt.show()
-
-            et = time.time()
-            print("Time to plant region {}".format(et - st))
-            print(len(red), len(blue))
-
+            disc = utils.disc_to_func("disc")
             start_time = time.time()
             
-            net_set = pyscan.my_sample(red, n) + pyscan.my_sample(blue, n)
             m_sample = [pyscan.WPoint(1.0, p[0], p[1], 1.0) for p in pyscan.my_sample(red, s)]
             b_sample = [pyscan.WPoint(1.0, p[0], p[1], 1.0) for p in pyscan.my_sample(blue, s)]
-            print(scan)
-            reg, mx = scan(net_set, m_sample, b_sample, disc)
+
+            if two_level_sample:
+                net_set1 = pyscan.my_sample(m_sample, n)
+                net_set2 = pyscan.my_sample(b_sample, n)
+                if ham_sample:
+                    s = int(1 / (2 * eps ** (4.0 / 3)) * math.log(1/eps)**(2/3.0))
+
+                    m_sample = pyscan.ham_tree_sample(m_sample, s)
+                    b_sample = pyscan.ham_tree_sample(b_sample, s)
+            else:
+                net_set1 = [pyscan.Point(p[0], p[1], p[2]) for p in m_sample]
+                net_set2 = [pyscan.Point(p[0], p[1], p[2]) for p in b_sample]
+                n = s
+
+            net_set1 = [pyscan.Point(p[0], p[1], p[2]) for p in net_set1]
+            net_set2 = [pyscan.Point(p[0], p[1], p[2]) for p in net_set2]
+            net_set = net_set1 + net_set2
+
+            if region_name == "halfplane":
+                reg, mx = pyscan.max_halfplane(net_set, m_sample, b_sample, disc)
+            elif region_name == "disk":
+                reg, mx = pyscan.max_disk(net_set, m_sample, b_sample, disc)
+            elif region_name == "rectangle":
+                grid = pyscan.Grid(n, m_sample, b_sample)
+                s1 = pyscan.max_subgrid_linear(grid, -1.0, 1.0)
+                s2 = pyscan.max_subgrid_linear(grid, 1.0, -1.0)
+                if s1.fValue() > s2.fValue():
+                    reg = grid.toRectangle(s1)
+                    mx = s1.fValue()
+                else:
+                    reg = grid.toRectangle(s2)
+                    mx = s2.fValue()
+            else:
+                return
             end_time = time.time()
 
             st = time.time()
@@ -79,9 +81,7 @@ def testing_flux_framework(
             et = time.time()
             print("Time to evaluate region {}".format(et - st))
 
-            row = {"vparam": vparam,
-                   "input_size":input_size,
-                   "disc": disc_name,
+            row = { "disc": "disc",
                    "region":region_name,
                    "n":n, "s":s, "r": r, "q":q,
                    "time":end_time - start_time,
@@ -90,6 +90,8 @@ def testing_flux_framework(
             writer.writerow(row)
             f.flush()
             print(row)
+            if max_time is not None and end_time - start_time > max_time:
+                return
 
 
 if __name__ == "__main__":
