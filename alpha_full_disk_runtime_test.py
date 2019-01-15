@@ -12,7 +12,7 @@ if __name__ == "__main__":
         #alpha = 1/6000
         #max_r = 1/50
         alpha = 1 / 500
-        max_r = 1 / 50
+        max_r = 1 / 300
         min_r = alpha
         c = 0
 

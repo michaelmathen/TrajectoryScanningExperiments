@@ -11,8 +11,8 @@ if __name__ == "__main__":
         #osm is 1/6000 and 1/300
         #alpha = 1/6000
         #max_r = 1/50
-        alpha = 1 / 500
-        max_r = 1 / 50
+        alpha = 1 / 6000
+        max_r = 1 / 300
         min_r = alpha
         c = 0
 
@@ -20,7 +20,7 @@ if __name__ == "__main__":
         for region, two_l_samp, sample_method, fast_disk in [("disk", True, "multiscale_disk", True), ("halfspace", True, "halfspace", True), ("rectangle_scale", True, "grid", True)]:
             full_testing.testing_full_framework(red, blue,
                                                 "full_bc_runtime_{}_{}_{}.csv".format(c, fname, region), -.1, -5, 80,
-                                                eps=.025,
+                                                eps=.05,
                                                 vparam="alpha",
                                                 region_name=region,
                                                 sample_method=sample_method,
