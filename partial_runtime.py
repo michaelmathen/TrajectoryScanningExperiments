@@ -6,7 +6,7 @@ import pyscan
 if __name__ == "__main__":
 
     #trajectories = paths.read_geolife_files(100)
-    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_100k.tsv")
+    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/osm_eu_sample_100k.tsv")
     r = .0025
     q = .2
     p = .5
