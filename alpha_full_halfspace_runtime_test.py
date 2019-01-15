@@ -11,8 +11,8 @@ if __name__ == "__main__":
         #osm is 1/6000 and 1/300
         #alpha = 1/6000
         #max_r = 1/50
-        alpha = 1 / 500
-        max_r = 1 / 50
+        alpha = 1 / 6000
+        max_r = 1 / 300
         min_r = alpha
         c = 0
 
