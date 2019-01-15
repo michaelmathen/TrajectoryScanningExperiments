@@ -28,7 +28,7 @@ if __name__ == "__main__":
                                                 two_level_sample=two_l_samp,
                                                 min_disk_r=min_r,
                                                 max_disk_r=max_r,
-                                                max_time = 1000)
+                                                max_time = 2000)
             c += 1
 
 

@@ -12,14 +12,14 @@ if __name__ == "__main__":
         #alpha = 1/6000
         #max_r = 1/50
         alpha = 1 / 6000
-        max_r = float("inf")
+        max_r = 1 / 300
         min_r = alpha
         c = 0
 
         red, blue = full_testing.generate_disk_sets(fname, r, p, q, min_r, max_r)
-        for region, two_l_samp, sample_method, fast_disk in [("disk", True, "even", False), ("halfplane", True, "even", False), ("rectangle", True, "even", False)]:
+        for region, two_l_samp, sample_method, fast_disk in [("small_disk", True, None, True), ("small_disk", True, "even", True), ("small_disk", True, "grid", True), ("multiscale_disk", True, "grid_direc", True)]:
             full_testing.testing_full_framework(red, blue,
-                                                "full_runtime_{}_{}_{}.csv".format(c, fname, region), -.1, -5, 80,
+                                                "full_bc_runtime_{}_{}_{}.csv".format(c, fname, region), -.1, -5, 80,
                                                 eps=.05,
                                                 vparam="alpha",
                                                 region_name=region,
@@ -31,5 +31,3 @@ if __name__ == "__main__":
                                                 max_disk_r=max_r,
                                                 max_time = 1000)
             c += 1
-
-
