@@ -17,10 +17,10 @@ if __name__ == "__main__":
         c = 0
 
         red, blue = full_testing.generate_halfplane_sets(fname, r, p, q)
-        for region, two_l_samp, sample_method, fast_disk in [("disk", True, "multiscale_disk", True), ("halfspace", True, "halfspace", True), ("rectangle_scale", True, "grid", True)]:
+        for region, two_l_samp, sample_method, fast_disk in [("multiscale_disk", True, "grid_direc", True), ("halfplane", True, "halfplane", True), ("rectangle_scale", True, "grid", True)]:
             full_testing.testing_full_framework(red, blue,
                                                 "full_bc_runtime_{}_{}_{}.csv".format(c, fname, region), -.1, -5, 80,
-                                                eps=.05,
+                                                eps=.01,
                                                 vparam="alpha",
                                                 region_name=region,
                                                 sample_method=sample_method,
@@ -29,7 +29,7 @@ if __name__ == "__main__":
                                                 fast_disk=fast_disk,
                                                 min_disk_r=min_r,
                                                 max_disk_r=max_r,
-                                                max_time = 1000)
+                                                max_time = 5000)
             c += 1
 
 

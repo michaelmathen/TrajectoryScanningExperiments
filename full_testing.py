@@ -12,9 +12,9 @@ import math
 def multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net, disc, fast_disk):
 
     mx = -1
-    curr_disk_r = min_disk_r
+    curr_disk_r = max(min_disk_r, alpha)
     reg = None
-    while curr_disk_r < max_disk_r:
+    while True:
 
         chord_l = math.sqrt(4 * alpha * curr_disk_r - 2 * alpha * alpha)
         m_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in red_sample]
@@ -33,6 +33,8 @@ def multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net,
             reg = new_reg
             mx = new_mx
         curr_disk_r *= 2
+        if curr_disk_r >= max_disk_r:
+            break
     return reg, mx
 
 
@@ -154,7 +156,8 @@ def testing_full_framework(
                     b_sample = [pyscan.lifting_kernel(traj, alpha) for traj in blue_sample]
                     pt_net = [pyscan.lifting_kernel(traj, alpha) for traj in net]
                 elif sample_method == "grid_direc":
-                    chord_l = math.sqrt(4 * alpha * min_disk_r - 2 * alpha * alpha)
+
+                    chord_l = math.sqrt(4 * alpha * max(min_disk_r, alpha) - 2 * alpha * alpha)
                     m_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in
                                 red_sample]
                     b_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in
@@ -183,11 +186,12 @@ def testing_full_framework(
                     elif region_name == "rectangle":
                         reg, mx = pyscan.max_rect_labeled(n, max_disk_r, m_sample, b_sample, disc)
                     elif region_name == "rectangle_scale":
-                        reg, mx = pyscan.max_rect_labeled(n, max_disk_r, alpha, net_set, m_sample, b_sample, disc)
+                        reg, mx = pyscan.max_rect_labeled_scale(n, max_disk_r, alpha, net_set, m_sample, b_sample, disc)
                     else:
                         return
 
             end_time = time.time()
+            print(reg)
             actual_mx = pyscan.evaluate_range_trajectory(reg, red, blue, disc)
             row = {"vparam": vparam,
                    "disc": disc_name,
