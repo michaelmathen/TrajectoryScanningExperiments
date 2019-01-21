@@ -17,6 +17,7 @@ def multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net,
     while True:
 
         chord_l = math.sqrt(4 * alpha * curr_disk_r - 2 * alpha * alpha)
+        #print(chord_l, alpha, curr_disk_r, max_disk_r)
         m_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in red_sample]
         b_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in blue_sample]
         pt_net = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in net]
@@ -63,8 +64,8 @@ def testing_full_framework(
         vparam="eps",
         eps=.01,
         alpha=.01,
-        max_disk_r=.1,
-        min_disk_r=.05,
+        max_disk_r=None,
+        min_disk_r=None,
         disc_name="disc",
         region_name="halfplane",
         sample_method="halfplane",
@@ -108,6 +109,10 @@ def testing_full_framework(
             s = 1 / (2 * eps * eps)
             n = int(round(n) + .1)
             s = int(round(s) + .1)
+
+            if max_disk_r is not None and alpha > max_disk_r:
+                print("Max Disk Radius is greater than alpha")
+                continue
 
             disc = utils.disc_to_func(disc_name)
 
@@ -191,7 +196,6 @@ def testing_full_framework(
                         return
 
             end_time = time.time()
-            print(reg)
             actual_mx = pyscan.evaluate_range_trajectory(reg, red, blue, disc)
             row = {"vparam": vparam,
                    "disc": disc_name,

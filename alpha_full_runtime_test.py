@@ -19,7 +19,7 @@ if __name__ == "__main__":
         red, blue = full_testing.generate_halfplane_sets(fname, r, p, q)
         for region, two_l_samp, sample_method, fast_disk in [("disk", True, "even", False), ("halfplane", True, "even", False), ("rectangle", True, "even", False)]:
             full_testing.testing_full_framework(red, blue,
-                                                "full_runtime_{}_{}_{}.csv".format(c, fname, region), -.1, -5, 80,
+                                                "full_runtime_{}_{}_{}.csv".format(c, fname, region), -1, -5, 80,
                                                 eps=.05,
                                                 vparam="alpha",
                                                 region_name=region,
