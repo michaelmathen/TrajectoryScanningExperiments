@@ -110,9 +110,6 @@ def testing_full_framework(
             n = int(round(n) + .1)
             s = int(round(s) + .1)
 
-            if max_disk_r is not None and alpha > max_disk_r:
-                print("Max Disk Radius is greater than alpha")
-                continue
 
             disc = utils.disc_to_func(disc_name)
 
@@ -132,6 +129,9 @@ def testing_full_framework(
             start_time = time.time()
 
             if region_name == "multiscale_disk":
+                if max_disk_r is not None and alpha > max_disk_r:
+                    print("Max Disk Radius is greater than alpha")
+                    continue
                 reg, mx = multiscale_disk(min_disk_r, max_disk_r, alpha, red_sample, blue_sample, net, disc, fast_disk)
                 m_sample, b_sample, net_set = [], [], []
             else:
@@ -179,6 +179,9 @@ def testing_full_framework(
                     m_sample = list(pyscan.trajectories_to_labels(red_sample))
                     b_sample = list(pyscan.trajectories_to_labels(blue_sample))
                     net_set = list(pyscan.trajectories_to_labels(net))
+                    if max_disk_r is not None and alpha > max_disk_r:
+                        print("Max Disk Radius is greater than alpha")
+                        continue
                     reg, mx = multiscale_disk_fixed(min_disk_r, max_disk_r, m_sample, b_sample, net_set, disc, fast_disk)
                 else:
                     m_sample = list(pyscan.trajectories_to_labels(m_sample))
