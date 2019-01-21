@@ -108,7 +108,7 @@ def partial_coreset_example(traj_count, point_count, s, method):
 
 
 for method in ["even", "block", "uniform"]:
-    partial_coreset_example(1, 20, 100, method)
+    partial_coreset_example(1, 20, 3, method)
     plt.savefig(method + "_partial.pdf")
     plt.clf()
 
