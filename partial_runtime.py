@@ -17,7 +17,7 @@ if __name__ == "__main__":
     for region_name, two_level_sample, ham_sand in [("disk", True, False), ("halfplane", True, False), ("halfplane", True, True), ("rectangle", True, False)]:
 
         output_file = "partial_runtime_{}_{}_{}.csv".format(region_name, "2" if two_level_sample else "1", "ham" if ham_sand else "rand")
-        partial_testing.testing_partial_framework(red, blue, output_file, -1, -4, 10, r=r, q=q, p=p,
+        partial_testing.testing_partial_framework(red, blue, output_file, -1, -4, 20, r=r, q=q, p=p,
                                   region_name=region_name,
                                   two_level_sample=two_level_sample,
                                   ham_sample=ham_sand,
