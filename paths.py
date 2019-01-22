@@ -7,6 +7,7 @@ import random
 import pyscan
 import math
 import itertools
+import fileinput
 
 import matplotlib.pyplot as plt
 
@@ -155,7 +156,7 @@ def dist(pt1, pt2):
 
 
 def normalize(pt, mxx, mnx, mxy, mny):
-    return (pt[0] - mnx[0]) / (mxx[0] - mnx[0]), (pt[1] - mny[1]) / (mxy[1] - mny[1])
+    return (pt[0] - mnx) / (mxx - mnx), (pt[1] - mny) / (mxy - mny)
 
 
 def normalize_all_projection(traces):
@@ -275,21 +276,43 @@ def read_geolife_files(count):
 
 
 def read_dong_csv(fname):
-    traj_id_set = {}
+
+    traj_id_set = []
     with open(fname) as f:
+        curr_id = None
+        mnx = float("inf")
+        mxx = -float("inf")
+        mny = float("inf")
+        mxy = -float("inf")
+
         for row in csv.reader(f, delimiter=" "):
             try:
-                if row[0] not in traj_id_set:
-                    traj_id_set[row[0]] = []
+                if row[0] != curr_id:
+                    curr_id = row[0]
+                    traj_id_set.append([])
                 if math.isnan(float(row[1])) or math.isinf(float(row[1])):
                     continue
                 if math.isnan(float(row[2])) or math.isinf(float(row[2])):
                     continue
-                traj_id_set[row[0]].append((float(row[1]), float(row[2])))
+
+                x, y = (float(row[1]), float(row[2]))
+                mnx = min(mnx, x)
+                mny = min(mny, y)
+                mxx = max(mxx, x)
+                mxy = max(mxy, y)
+                traj_id_set[-1].append((float(row[1]), float(row[2])))
 
             except ValueError:
                 continue
-        return normalize_all([traj_id_set[id] for id in traj_id_set])
+        print("got here")
+        norm_traces = []
+        while traj_id_set:
+            norm_trace = []
+            trace = traj_id_set.pop()
+            for pt in trace:
+                norm_trace.append(normalize(pt, mxx, mnx, mxy, mny))
+            norm_traces.append(norm_trace)
+        return norm_traces
 
 
 
