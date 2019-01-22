@@ -172,14 +172,15 @@ def plot_plane_full_trajectories(trajectories, r, p, q):
     plt.show()
 
 
-def testing(trajectories, alpha, max_r, count):
+def testing(trajectories, alpha, max_r):
 
-    for i in np.linspace(alpha, max_r, count):
-        chord_l = math.sqrt(4 * alpha * i -  2 * alpha * alpha)
+    curr_r = alpha
+    while curr_r <= max_r:
+        chord_l = math.sqrt(4 * alpha * curr_r -  2 * alpha * alpha)
         sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
         pts = list(itertools.chain.from_iterable(sample))
-        print("Grid Directional radius = {0:.4f} : {1:.4f} ".format(i, len(pts) / len(trajectories)))
-
+        print("Grid Directional radius = {0:.4f} : {1:.4f} ".format(curr_r * 50, len(pts) / len(trajectories)))
+        curr_r *= 2
 
     sample = [pyscan.grid_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
     pts = list(itertools.chain.from_iterable(sample))
@@ -193,9 +194,17 @@ def testing(trajectories, alpha, max_r, count):
     pts = list(itertools.chain.from_iterable(sample))
     print("DP : {0:.2f}".format(len(pts) / len(trajectories)))
 
-    sample = [pyscan.lifting_kernel(pyscan.dp_compress(traj, alpha), .01) for traj in trajectories]
+    # sample = [pyscan.lifting_kernel(pyscan.dp_compress(traj, alpha), .01) for traj in trajectories]
+    # pts = list(itertools.chain.from_iterable(sample))
+    # print("Lifting : {0:.2f}".format(len(pts) / len(trajectories)))
+
+    sample = [pyscan.convex_hull([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj]) for traj in trajectories]
     pts = list(itertools.chain.from_iterable(sample))
-    print("Lifting : {0:.2f}".format(len(pts) / len(trajectories)))
+    print("Hull : {0:.2f}".format(len(pts) / len(trajectories)))
+
+    sample = [pyscan.even_sample_error([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj], alpha, False) for traj in trajectories]
+    pts = list(itertools.chain.from_iterable(sample))
+    print("Even : {0:.2f}".format(len(pts) / len(trajectories)))
 
     # sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
     # sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
@@ -210,6 +219,10 @@ def test_halfspace_error(trajectories, core_sets):
 
     for (traj, traj_approx) in zip(trajectories, core_sets):
         (reg, curr_error) = pyscan.coreset_error_halfplane(traj, traj_approx)
+        # if math.isnan(curr_error) or math.isinf(curr_error) or curr_error > 1.0:
+        #     print(curr_error)
+        #     print(traj)
+
         yield curr_error
 
 def post_process_error(point_set):
@@ -232,20 +245,32 @@ def test_disk_error(trajectories, core_sets, min_radius, max_radius):
 def testing_geometric_error(trajectories, alpha, max_r, count):
     random.shuffle(trajectories)
     trajectories = trajectories[:30]
-    for i in np.linspace(alpha, max_r, count):
-        chord_l = math.sqrt(4 * alpha * i -  2 * alpha * alpha)
+    print("got here")
+    curr_r = alpha
+    while curr_r < max_r:
+        chord_l = math.sqrt(4 * alpha * curr_r -  2 * alpha * alpha)
         sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
-        print("Grid Direc Error {} {}".format(50 * i, 50 * post_process_error(test_halfspace_error(trajectories, sample))))
+        for error, traj in zip(test_halfspace_error(trajectories, sample), trajectories):
+            if error > alpha:
+                print(error)
+                print(traj)
+        #print("Grid Direc Error {} {}".format(i, post_process_error(test_halfspace_error(trajectories, sample))))
 
 
     sample = [pyscan.grid_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
-    print("Grid : {}".format(50 * post_process_error(test_halfspace_error(trajectories, sample))))
+    print("Grid : {}".format(post_process_error(test_halfspace_error(trajectories, sample))))
 
     sample = [pyscan.halfplane_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
-    print("Halfplane : {}".format(50 * post_process_error(test_halfspace_error(trajectories, sample))))
+    print("Halfplane : {}".format( post_process_error(test_halfspace_error(trajectories, sample))))
 
     sample = [pyscan.dp_compress(traj, alpha) for traj in trajectories]
-    print("DP Error: {}".format(50 * post_process_error(test_halfspace_error(trajectories, sample))))
+    print("DP Error: {}".format(post_process_error(test_halfspace_error(trajectories, sample))))
+
+    sample = [pyscan.convex_hull([pyscan.Point(pt[0], pt[1], 1.0) for pt in traj]) for traj in trajectories]
+    print("Hull Error: {}".format( post_process_error(test_halfspace_error(trajectories, sample))))
+
+    sample = [pyscan.even_sample_error(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
+    print("Even : {}".format(post_process_error(test_halfspace_error(trajectories, sample))))
 
     # sample = [pyscan.lifting_kernel(pyscan.dp_compress(traj, alpha), .01) for traj in trajectories]
     # pts = list(itertools.chain.from_iterable(sample))
@@ -269,8 +294,8 @@ def testing_disk_geometric_error(trajectories, alpha, max_r, count):
     sample = [pyscan.dp_compress(traj, alpha) for traj in trajectories]
     print("DP Error: {}".format(50 * post_process_error(test_disk_error(trajectories, sample, alpha, max_r))))
 
-trajectories = paths.read_geolife_files(1000)
-#trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_10k_nw.tsv")
+#trajectories = paths.read_geolife_files(1000)
+trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_10k_nw.tsv")
 
 #trajectories = clean(trajectories)
 #print(len(trajectories))
@@ -282,8 +307,14 @@ q= 1.0
 eps_r=.01
 
 #plot_full_trajectories_intersection_check(trajectories, r)
+# OSM EU 1/30000, 1/300
+# BJTAXI 1/500 1/5
+testing(trajectories, 1/500, 1/50)
+#testing_geometric_error(trajectories, 1/100, 1/10, 3)
+
+
 
 #testing_disk_geometric_error(trajectories,.1, .01, 5)
 #plot_partial_trajectories(trajectories, r, p, q, eps_r)
-plot_plane_partial_trajectories(trajectories, r, p, q, eps_r)
+#plot_plane_partial_trajectories(trajectories, r, p, q, eps_r)
 

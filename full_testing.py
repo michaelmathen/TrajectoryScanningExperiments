@@ -162,6 +162,9 @@ def testing_full_framework(
                     pt_net = [pyscan.lifting_kernel(traj, alpha) for traj in net]
                 elif sample_method == "grid_direc":
 
+                    if max_disk_r is not None and alpha > max_disk_r:
+                        print("Max Disk Radius is greater than alpha")
+                        continue
                     chord_l = math.sqrt(4 * alpha * max(min_disk_r, alpha) - 2 * alpha * alpha)
                     m_sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in
                                 red_sample]
@@ -176,12 +179,9 @@ def testing_full_framework(
                     return
 
                 if region_name == "multiscale_disk_fixed":
-                    m_sample = list(pyscan.trajectories_to_labels(red_sample))
-                    b_sample = list(pyscan.trajectories_to_labels(blue_sample))
-                    net_set = list(pyscan.trajectories_to_labels(net))
-                    if max_disk_r is not None and alpha > max_disk_r:
-                        print("Max Disk Radius is greater than alpha")
-                        continue
+                    m_sample = list(pyscan.trajectories_to_labels(m_sample))
+                    b_sample = list(pyscan.trajectories_to_labels(b_sample))
+                    net_set = list(pyscan.trajectories_to_labels(pt_net))
                     reg, mx = multiscale_disk_fixed(min_disk_r, max_disk_r, m_sample, b_sample, net_set, disc, fast_disk)
                 else:
                     m_sample = list(pyscan.trajectories_to_labels(m_sample))
