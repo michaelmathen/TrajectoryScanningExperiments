@@ -23,8 +23,8 @@ if __name__ == "__main__":
         for approx in ["even", "uniform", "block"]:
             if region_name == "halfplane":
                 for ham_sand in [True, False]:
-                    output_file = "partial_error_{}_{}_approx.csv".format(region_name, "2", "ham" if ham_sand else "rand", approx)
-                    partial_testing.testing_partial_framework(red, blue, output_file, -1, -4, 20, r=r, q=q, p=p,
+                    output_file = "partial_error_{}_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand", approx)
+                    partial_testing.testing_partial_framework(red, blue, output_file, -1, -5, 80, r=r, q=q, p=p,
                                               region_name=region_name,
                                               two_level_sample=True,
                                               ham_sample=ham_sand,
@@ -32,9 +32,8 @@ if __name__ == "__main__":
                                               max_time=1000)
             else:
                 ham_sand = False
-                output_file = "partial_error_{}_{}_approx.csv".format(region_name, "2", "ham" if ham_sand else "rand",
-                                                                      approx)
-                partial_testing.testing_partial_framework(red, blue, output_file, -1, -4, 20, r=r, q=q, p=p,
+                output_file = "partial_error_{}_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand", approx)
+                partial_testing.testing_partial_framework(red, blue, output_file, -1, -5, 80, r=r, q=q, p=p,
                                                           region_name=region_name,
                                                           two_level_sample=True,
                                                           ham_sample=ham_sand,
