@@ -2,26 +2,25 @@ import full_testing
 
 if __name__ == "__main__":
 
-    for fname in ["bjtaxi_samples_100k_nw"]:
+    for fname in ["osm_eu_sample_100k_nw"]:
 
-        r = .05
+        r = .005
         p = .5
         q = .2
         #bjtax is 1/500 and 1/50
         #osm is 1/6000 and 1/300
         #alpha = 1/6000
         #max_r = 1/50
-        alpha = 1 / 500
-        max_r = 1 / 50
+        alpha = 1 / 6000
+        max_r = 1 / 100
         min_r = alpha
         c = 0
 
-        red, blue = full_testing.generate_halfplane_sets(fname, r, p, q)
-        for region, two_l_samp, sample_method, fast_disk in [("multiscale_disk", True, "grid_direc", True), ("halfplane", True, "halfplane", True), ("rectangle", True, "grid", True)]:
+        red, blue = full_testing.generate_disk_sets(fname, r, p, q, min_r, max_r)
+        for region, two_l_samp, sample_method, fast_disk in [("multiscale_disk_fixed", True, "even", False), ("disk", True, "even", False), ("multiscale_disk", True, "grid_direc", False), ("multiscale_disk", True, "grid_direc", True)]:
             full_testing.testing_full_framework(red, blue,
-                                                "full_bc_runtime_{}_{}_{}.csv".format(c, fname, region), -1, -5, 40,
-                                                eps=.01,
-                                                vparam="alpha",
+                                                "full_eps_disk_error_{}_{}_{}.csv".format(c, fname, region), -1, -3, 80,
+                                                vparam="eps",
                                                 region_name=region,
                                                 sample_method=sample_method,
                                                 alpha=alpha,
@@ -29,7 +28,7 @@ if __name__ == "__main__":
                                                 fast_disk=fast_disk,
                                                 min_disk_r=min_r,
                                                 max_disk_r=max_r,
-                                                max_time = 10000)
+                                                max_time = 1000)
             c += 1
 
 

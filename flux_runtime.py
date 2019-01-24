@@ -40,7 +40,7 @@ if __name__ == "__main__":
         #         return reg, mx
 
         output_file = "flux_runtime_{}_{}_{}.csv".format(region_name, "2" if two_level_sample else "1", "ham" if ham_sand else "rand")
-        flux_testing.testing_flux_framework(output_file, st_pts, end_pts, -1, -4, 80, r=r, q=q,
+        flux_testing.testing_flux_framework(output_file, st_pts, end_pts, -1, -4, 80,
                                   region_name=region_name,
                                   two_level_sample=two_level_sample,
                                   ham_sample=ham_sand,

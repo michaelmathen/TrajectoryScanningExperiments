@@ -11,8 +11,6 @@ def testing_flux_framework(
         output_file,
         red, blue,
         l_s, h_s, count,
-        r=.04,
-        q=.2,
         region_name="disk",
         two_level_sample=True,
         ham_sample=False,
@@ -20,7 +18,7 @@ def testing_flux_framework(
 
 
 
-    fieldnames = ["disc", "region", "n", "s", "r", "q", "time",
+    fieldnames = ["disc", "region", "n", "s", "time",
                   "m_disc",
                   "m_disc_approx"]
     with open(output_file, 'w') as f:
@@ -83,7 +81,7 @@ def testing_flux_framework(
 
             row = { "disc": "disc",
                    "region":region_name,
-                   "n":n, "s":s, "r": r, "q":q,
+                   "n":n, "s":s,
                    "time":end_time - start_time,
                    "m_disc_approx": mx,
                    "m_disc": actual_mx}
