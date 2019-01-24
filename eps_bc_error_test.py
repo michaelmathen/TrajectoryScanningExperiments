@@ -1,4 +1,5 @@
 import full_testing
+import pyscan
 
 if __name__ == "__main__":
 
@@ -16,10 +17,15 @@ if __name__ == "__main__":
         min_r = alpha
         c = 0
 
-        red, blue = full_testing.generate_disk_sets(fname, r, p, q, min_r, max_r)
-        for region, two_l_samp, sample_method, fast_disk in [("multiscale_disk_fixed", True, "even", False), ("disk", True, "even", False), ("multiscale_disk", True, "grid_direc", False), ("multiscale_disk", True, "grid_direc", True)]:
+
+        for region, two_l_samp, sample_method, fast_disk in [("multiscale_disk", True, "grid_direc", True), ("halfplane", True, "halfplane", True)]:#, ("rectangle", True, "grid", True)]:
+            if region == "halfplane":
+                red, blue = full_testing.generate_halfplane_sets(fname, r, p, q)
+            elif region == "disk":
+                red, blue = full_testing.generate_disk_sets(fname, r, p, q, min_r, max_r)
+
             full_testing.testing_full_framework(red, blue,
-                                                "full_eps_disk_error_{}_{}_{}.csv".format(c, fname, region), -1, -4, 80,
+                                                "full_eps_bc_error_{}_{}_{}.csv".format(c, fname, region), -1, -4, 40,
                                                 vparam="eps",
                                                 region_name=region,
                                                 sample_method=sample_method,
@@ -28,7 +34,7 @@ if __name__ == "__main__":
                                                 fast_disk=fast_disk,
                                                 min_disk_r=min_r,
                                                 max_disk_r=max_r,
-                                                max_time = 5000)
+                                                max_time = 1000)
             c += 1
 
 

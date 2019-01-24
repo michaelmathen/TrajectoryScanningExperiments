@@ -216,6 +216,19 @@ def testing_full_framework(
             if max_time is not None and end_time - start_time > max_time:
                 return
 
+def generate_rectangle_sets(fname, r, p, q, min_r, max_r):
+
+    disc = utils.disc_to_func("disc")
+    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
+
+    while True:
+        pyscan.plant_full
+        red, blue, planted_reg , planted_mx = pyscan.plant_full_rec(trajectories, r, p, q, disc)
+        print(min_r, planted_reg.get_radius(), max_r)
+        if min_r < planted_reg.get_radius() < max_r:
+            break
+    return red, blue
+
 
 def generate_disk_sets(fname, r, p, q, min_r, max_r):
 
