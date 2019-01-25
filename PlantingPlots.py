@@ -92,6 +92,26 @@ def plot_full_trajectories_intersection_check(trajectories, r):
     plt.show()
 
 
+def plot_full_trajectories_intersection_rect(trajectories, r):
+    disc = utils.disc_to_func("disc")
+    red, blue, rect, _ = pyscan.plant_full_square(trajectories, r, 0.5, 0.5, disc)
+
+    ax = plt.subplot()
+
+    blue_c = 0
+    for traj in trajectories:
+        if rect.intersects_trajectory(traj):
+            blue_c += 1
+            plot_line(ax, traj, "b")
+        else:
+            plot_line(ax, traj, "r")
+    print(blue_c / len(trajectories), r)
+
+    actor = plt.Rectangle((rect.upX(), rect.upY()), rect.upX() - rect.lowX(), rect.upY() - rect.lowY())
+    ax.add_artist(actor)
+    plt.show()
+
+
 def plot_plane_partial_trajectories(trajectories, r, p, q, eps_r):
     disc = utils.disc_to_func("disc")
     red, blue, mx_plane, _ = pyscan.plant_partial_halfplane(trajectories, r, p, q, eps_r, disc)
@@ -179,7 +199,7 @@ def testing(trajectories, alpha, max_r):
         chord_l = math.sqrt(4 * alpha * curr_r -  2 * alpha * alpha)
         sample = [pyscan.grid_direc_kernel(pyscan.dp_compress(traj, alpha), chord_l, alpha) for traj in trajectories]
         pts = list(itertools.chain.from_iterable(sample))
-        print("Grid Directional radius = {0:.4f} : {1:.4f} ".format(curr_r * 50, len(pts) / len(trajectories)))
+        print("Grid Directional radius = {0:.4f} : {1:.4f} ".format(curr_r * 3000, len(pts) / len(trajectories)))
         curr_r *= 2
 
     sample = [pyscan.grid_kernel(pyscan.dp_compress(traj, alpha), alpha) for traj in trajectories]
@@ -295,22 +315,22 @@ def testing_disk_geometric_error(trajectories, alpha, max_r, count):
     print("DP Error: {}".format(50 * post_process_error(test_disk_error(trajectories, sample, alpha, max_r))))
 
 #trajectories = paths.read_geolife_files(1000)
-trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_10k_nw.tsv")
+trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/osm_eu_sample_10k_nw.tsv")
 
 #trajectories = clean(trajectories)
 #print(len(trajectories))
 #plot_plane_full_trajectories(trajectories, .25, 1.0, 0.0)
 
-r=.1
+r=.02
 p =.5
 q= 1.0
 eps_r=.01
 
-#plot_full_trajectories_intersection_check(trajectories, r)
+#plot_full_trajectories_intersection_rect(trajectories, r)
 # OSM EU 1/30000, 1/300
 # BJTAXI 1/500 1/5
-testing(trajectories, 1/500, 1/50)
-#testing_geometric_error(trajectories, 1/100, 1/10, 3)
+testing(trajectories, 1/30000, 1/300)
+#testing_geometric_error(trajectories, 1/500, 1/10, 3)
 
 
 

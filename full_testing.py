@@ -192,9 +192,9 @@ def testing_full_framework(
                     elif region_name == "disk":
                         reg, mx = pyscan.max_disk_labeled(net_set, m_sample, b_sample, disc)
                     elif region_name == "rectangle":
-                        reg, mx = pyscan.max_rect_labeled(n, max_disk_r, m_sample, b_sample, disc)
+                        reg, mx = pyscan.max_rect_labeled(n, 2 * max_disk_r, m_sample, b_sample, disc)
                     elif region_name == "rectangle_scale":
-                        reg, mx = pyscan.max_rect_labeled_scale(n, max_disk_r, alpha, net_set, m_sample, b_sample, disc)
+                        reg, mx = pyscan.max_rect_labeled_scale(n, 2 * max_disk_r, alpha, net_set, m_sample, b_sample, disc)
                     else:
                         return
 
@@ -216,16 +216,14 @@ def testing_full_framework(
             if max_time is not None and end_time - start_time > max_time:
                 return
 
-def generate_rectangle_sets(fname, r, p, q, min_r, max_r):
+def generate_rectangle_sets(fname, r, p, q, max_side_length):
 
-    disc = utils.disc_to_func("disc")
     trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
-
+    disc = utils.disc_to_func("disc")
     while True:
-        pyscan.plant_full
-        red, blue, planted_reg , planted_mx = pyscan.plant_full_rec(trajectories, r, p, q, disc)
-        print(min_r, planted_reg.get_radius(), max_r)
-        if min_r < planted_reg.get_radius() < max_r:
+        red, blue, planted_reg, _ = pyscan.plant_full_square(trajectories, r, p, q, disc)
+        print(planted_reg.upX() - planted_reg.lowX(), max_side_length)
+        if planted_reg.upX() - planted_reg.lowX() < max_side_length:
             break
     return red, blue
 

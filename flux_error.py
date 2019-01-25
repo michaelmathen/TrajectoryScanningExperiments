@@ -32,14 +32,14 @@ if __name__ == "__main__":
             if region_name == "halfplane":
                 for ham_sand in [False, True]:
                     output_file = "flux_error_{}_{}_{}_approx.csv".format(region_name, "ham" if ham_sand else "rand", approx)
-                    flux_testing.testing_flux_framework(output_file, red, blue, -1, -6, 80,
+                    flux_testing.testing_flux_framework(output_file, red, blue, -1, -5, 80,
                                                         region_name=region_name,
                                                         two_level_sample=True,
                                                         ham_sample=ham_sand,
                                                         max_time=1000)
             else:
                 output_file = "flux_error_{}_{}_{}_approx.csv".format(region_name, "rand", approx)
-                flux_testing.testing_flux_framework(output_file, red, blue, -1, -6, 80,
+                flux_testing.testing_flux_framework(output_file, red, blue, -1, -5, 80,
                                                   region_name=region_name,
                                                   two_level_sample=True,
                                                   ham_sample=False,

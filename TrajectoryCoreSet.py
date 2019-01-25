@@ -62,7 +62,7 @@ def full_coreset_example(point_count, alpha, method, min_r=None):
     if min_r is None:
         min_r = alpha
 
-    #pts = boxed_trajectory(point_count)
+    # pts = boxed_trajectory(point_count)
     #pts = [(0.2562716971245123, 0.37042159171941874), (0.2562716971245123, 0.4148497093588573)]
     pts = [(0.28076897884325597, 0.5709315642759948), (0.2883670662212526, 0.5731789009659035),
            (0.2804742254535915, 0.5708019102361805), (0.28057247658348744, 0.5704993841433011),
@@ -95,24 +95,25 @@ def full_coreset_example(point_count, alpha, method, min_r=None):
            (0.43875679570315246, 0.9269615575772004), (0.43872404532651277, 0.9269831665838106),
            (0.43872404532651277, 0.9270263845970922), (0.43872404532651277, 0.9269183395639188),
            (0.43878954607976894, 0.9269399485705596), (0.4388550468330484, 0.9274153467165043),
-           (0.43675902272875744, 0.9279987898956222), (0.4359402633130202, 0.9259675432720297)]
+           (0.43675902272875744, 0.9279987898956222), (0.4359402633130202, 0.9259675432720297),
+           (0.2562716971245123, 0.37042159171941874), (0.2562716971245123, 0.4148497093588573)]
     if method == "lifting":
         core_set_pts = pyscan.lifting_kernel(pts, math.sqrt(alpha))
-    #elif method == "grid":
-    #     core_set_pts = pyscan.grid_kernel(pts, alpha)
-    # elif method == "even":
-    #     core_set_pts = pyscan.even_sample_error(pts, alpha, False)
-    # elif method =="grid_alt":
-    #     core_set_pts = pyscan.grid_trajectory(pts, alpha)
+    elif method == "grid":
+         core_set_pts = pyscan.grid_kernel(pts, alpha)
+    elif method == "even":
+         core_set_pts = pyscan.even_sample_error(pts, alpha, False)
+    elif method =="grid_alt":
+         core_set_pts = pyscan.grid_trajectory(pts, alpha)
     elif method == "grid_direc":
         chord_l = math.sqrt(4 * alpha * min_r - 2 * alpha * alpha)
         core_set_pts = pyscan.grid_direc_kernel(pts, chord_l, alpha)
-    # elif method == "kernel":
-    #     core_set_pts = pyscan.halfplane_kernel(pts, alpha)
-    # elif method == "graham":
-    #     core_set_pts = pyscan.hull(pts)
-    # elif method == "dp":
-    #     core_set_pts = pyscan.dp_compress(pts, alpha)
+    elif method == "kernel":
+        core_set_pts = pyscan.halfplane_kernel(pts, alpha)
+    elif method == "graham":
+        core_set_pts = pyscan.hull(pts)
+    elif method == "dp":
+        core_set_pts = pyscan.dp_compress(pts, alpha)
     else:
         return
 
@@ -152,7 +153,7 @@ def partial_coreset_example(traj_count, point_count, s, method):
 #     plt.savefig(method + "_partial.pdf")
 #     plt.clf()
 
-for method in ["lifting", "grid", "even", "grid_alt", "grid_direc", "kernel", "dp", "graham"]:
+for method in ["grid", "even", "grid_alt", "grid_direc", "kernel", "dp", "graham"]:
     full_coreset_example(20, 1/100, method, min_r=2/10)
     plt.savefig(method + "_full.pdf")
     plt.clf()

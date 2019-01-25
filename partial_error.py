@@ -24,7 +24,7 @@ if __name__ == "__main__":
             if region_name == "halfplane":
                 ham_sand = False
                 output_file = "partial_error_{}_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand", approx)
-                partial_testing.testing_partial_framework(red, blue, output_file, -1, -5, 40, r=r, q=q, p=p,
+                partial_testing.testing_partial_framework(red, blue, output_file, -1, -4, 40, r=r, q=q, p=p,
                                           region_name=region_name,
                                           two_level_sample=True,
                                           ham_sample=ham_sand,
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             else:
                 ham_sand = False
                 output_file = "partial_error_{}_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand", approx)
-                partial_testing.testing_partial_framework(red, blue, output_file, -1, -5, 40, r=r, q=q, p=p,
+                partial_testing.testing_partial_framework(red, blue, output_file, -1, -4, 40, r=r, q=q, p=p,
                                                           region_name=region_name,
                                                           two_level_sample=True,
                                                           ham_sample=ham_sand,
