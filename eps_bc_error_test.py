@@ -18,12 +18,16 @@ if __name__ == "__main__":
         c = 0
 
 
-        for region, two_l_samp, sample_method, fast_disk in [("multiscale_disk", True, "grid_direc", True), ("halfplane", True, "halfplane", True)]:#, ("rectangle", True, "grid", True)]:
+        for region, two_l_samp, sample_method, fast_disk in [("rectangle", True, "grid", True), ("multiscale_disk", True, "grid_direc", True), ("halfplane", True, "halfplane", True)]:
             if region == "halfplane":
                 red, blue = full_testing.generate_halfplane_sets(fname, r, p, q)
-            elif region == "disk":
+            elif region == "multiscale_disk":
                 red, blue = full_testing.generate_disk_sets(fname, r, p, q, min_r, max_r)
-
+            elif region == "rectangle":
+                red, blue = full_testing.generate_rectangle_sets(fname, r, p, q, 2 * max_r)
+            else:
+                print("Unrecognized region")
+                break
             full_testing.testing_full_framework(red, blue,
                                                 "full_eps_bc_error_{}_{}_{}.csv".format(c, fname, region), -1, -4, 40,
                                                 vparam="eps",
@@ -34,7 +38,7 @@ if __name__ == "__main__":
                                                 fast_disk=fast_disk,
                                                 min_disk_r=min_r,
                                                 max_disk_r=max_r,
-                                                max_time = 1000)
+                                                max_time = 5000)
             c += 1
 
 

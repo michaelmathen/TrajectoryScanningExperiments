@@ -22,18 +22,18 @@ if __name__ == "__main__":
             red, blue, _, _ = pyscan.plant_partial_halfplane(trajectories, r, p, q, eps_r, disc)
         for approx in ["even", "uniform", "block"]:
             if region_name == "halfplane":
-                for ham_sand in [True, False]:
-                    output_file = "partial_error_{}_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand", approx)
-                    partial_testing.testing_partial_framework(red, blue, output_file, -1, -5, 80, r=r, q=q, p=p,
-                                              region_name=region_name,
-                                              two_level_sample=True,
-                                              ham_sample=ham_sand,
-                                              sample_method=approx,
-                                              max_time=1000)
+                ham_sand = False
+                output_file = "partial_error_{}_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand", approx)
+                partial_testing.testing_partial_framework(red, blue, output_file, -1, -4, 40, r=r, q=q, p=p,
+                                          region_name=region_name,
+                                          two_level_sample=True,
+                                          ham_sample=ham_sand,
+                                          sample_method=approx,
+                                          max_time=1000)
             else:
                 ham_sand = False
                 output_file = "partial_error_{}_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand", approx)
-                partial_testing.testing_partial_framework(red, blue, output_file, -1, -5, 80, r=r, q=q, p=p,
+                partial_testing.testing_partial_framework(red, blue, output_file, -1, -4, 40, r=r, q=q, p=p,
                                                           region_name=region_name,
                                                           two_level_sample=True,
                                                           ham_sample=ham_sand,
