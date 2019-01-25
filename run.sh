@@ -1,6 +1,8 @@
 #!/bin/bash
 
-cd ../pyscan/build
+cd ../pyscan
+git pull
+cd build
 rm -rf *
 cmake ..
 make -j8
