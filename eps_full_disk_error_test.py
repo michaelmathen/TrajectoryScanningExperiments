@@ -12,7 +12,7 @@ if __name__ == "__main__":
         #alpha = 1/6000
         #max_r = 1/50
         alpha = 1 / 6000
-        max_r = 1 / 300
+        max_r = 1 / 100
         min_r = alpha
         c = 0
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
                                                 fast_disk=fast_disk,
                                                 min_disk_r=min_r,
                                                 max_disk_r=max_r,
-                                                max_time = 1000)
+                                                max_time = 2000)
             c += 1
 
 
