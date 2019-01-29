@@ -275,7 +275,7 @@ def read_geolife_files(count):
     return normed_traces
 
 
-def read_dong_csv(fname):
+def read_dong_csv(fname, filter_long=False):
 
     traj_id_set = []
     with open(fname) as f:
@@ -312,9 +312,17 @@ def read_dong_csv(fname):
             for pt in trace:
                 norm_trace.append(normalize(pt, mxx, mnx, mxy, mny))
             norm_traces.append(norm_trace)
-        return norm_traces
+        if filter_long:
+            return remove_long_trajectories(norm_traces)
+        else:
+            return norm_traces
 
+def remove_long_trajectories(trajectories, percent=.9):
 
+    ltraj = sorted(pyscan.Trajectory(traj).get_length() for traj in trajectories)
+    perc_len_traj = ltraj[int(percent * len(trajectories))]
+    del ltraj
+    return [traj for traj in trajectories if pyscan.Trajectory(traj).get_length() <= perc_len_traj]
 
 # for waypoint in gpx.waypoints:
 #     print 'waypoint {0} -> ({1},{2})'.format( waypoint.name, waypoint.latitude, waypoint.longitude )

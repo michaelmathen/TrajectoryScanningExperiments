@@ -28,19 +28,18 @@ if __name__ == "__main__":
             method = pyscan.plant_halfplane
 
         red, blue, reg = pyscan.paired_plant_region(st_pts, end_pts, r, q, method)
-        for approx in ["even", "uniform", "block"]:
-            if region_name == "halfplane":
-                for ham_sand in [False, True]:
-                    output_file = "flux_error_{}_{}_{}_approx.csv".format(region_name, "ham" if ham_sand else "rand", approx)
-                    flux_testing.testing_flux_framework(output_file, red, blue, -1, -5, 80,
-                                                        region_name=region_name,
-                                                        two_level_sample=True,
-                                                        ham_sample=ham_sand,
-                                                        max_time=1000)
-            else:
-                output_file = "flux_error_{}_{}_{}_approx.csv".format(region_name, "rand", approx)
+        if region_name == "halfplane":
+            for ham_sand in [False, True]:
+                output_file = "flux_error_{}_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand")
                 flux_testing.testing_flux_framework(output_file, red, blue, -1, -5, 80,
-                                                  region_name=region_name,
-                                                  two_level_sample=True,
-                                                  ham_sample=False,
-                                                  max_time=1000)
+                                                    region_name=region_name,
+                                                    two_level_sample=True,
+                                                    ham_sample=ham_sand,
+                                                    max_time=1000)
+        else:
+            output_file = "flux_error_{}_{}_{}.csv".format(region_name, "rand")
+            flux_testing.testing_flux_framework(output_file, red, blue, -1, -5, 80,
+                                              region_name=region_name,
+                                              two_level_sample=True,
+                                              ham_sample=False,
+                                              max_time=1000)
