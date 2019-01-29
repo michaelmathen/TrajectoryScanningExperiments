@@ -6,7 +6,7 @@ import pyscan
 if __name__ == "__main__":
 
     #trajectories = paths.read_geolife_files(100)
-    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/osm_eu_sample_100k_nw.tsv")
+    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_100k_nw.tsv")
 
     st_pts, end_pts = pyscan.trajectories_to_flux(trajectories)
     st_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in st_pts]
