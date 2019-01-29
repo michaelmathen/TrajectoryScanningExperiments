@@ -17,7 +17,7 @@ if __name__ == "__main__":
         c = 0
 
         red, blue = full_testing.generate_halfplane_sets(fname, r, p, q)
-        for region, two_l_samp, sample_method, fast_disk in [("multiscale_disk_fixed", True, "even", False), ("disk", True, "even", False), ("multiscale_disk", True, "grid_direc", False), ("multiscale_disk", True, "grid_direc", True)]:
+        for region, two_l_samp, sample_method, fast_disk in [("multiscale_disk", True, "grid_direc", False), ("multiscale_disk", True, "grid_direc", True)]: #("multiscale_disk_fixed", True, "even", False), ("disk", True, "even", False), ]:
             full_testing.testing_full_framework(red, blue,
                                                 "full_eps_disk_runtime_{}_{}_{}.csv".format(c, fname, region), -1, -3, 80,
                                                 vparam="eps",
@@ -28,7 +28,7 @@ if __name__ == "__main__":
                                                 fast_disk=fast_disk,
                                                 min_disk_r=min_r,
                                                 max_disk_r=max_r,
-                                                max_time = 1000)
+                                                max_time = 2000)
             c += 1
 
 
