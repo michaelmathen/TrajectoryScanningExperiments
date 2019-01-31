@@ -18,7 +18,7 @@ if __name__ == "__main__":
         c = 0
 
 
-        for region, two_l_samp, sample_method, fast_disk in [("rectangle", True, "grid", True), ("multiscale_disk", True, "grid_direc", True), ("halfplane", True, "halfplane", True)]:
+        for region, two_l_samp, sample_method, fast_disk in [("halfplane", True, "hull", True)]]:
             if region == "halfplane":
                 red, blue = full_testing.generate_halfplane_sets(fname, r, p, q)
             elif region == "multiscale_disk":

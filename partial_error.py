@@ -20,7 +20,7 @@ def traj_length_distribution(trajectories):
 if __name__ == "__main__":
 
     #trajectories = paths.read_geolife_files(100)
-    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/osm_eu_sample_100k_nw.tsv", filter_long=True)
+    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/osm_eu_sample_10k_nw.tsv", filter_long=True)
 
     r = .005
     q = .2
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     eps_r = .001
     disc = utils.disc_to_func("disc")
 
-    for region_name in ["halfplane", "disk", "rectangle"]:
+    for region_name in [ "rectangle","halfplane", "disk"]:
         if region_name == "disk":
             red, blue, reg, d = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
         elif region_name == "rectangle":

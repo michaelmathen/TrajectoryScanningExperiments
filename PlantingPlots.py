@@ -130,6 +130,11 @@ def plot_plane_partial_trajectories(trajectories, r, p, q, eps_r):
     ax.plot(xs, ys, color="g")
     plt.show()
 
+def plot_trajectory_set(trajectories, sample):
+    ax = plt.subplot()
+    for traj in pyscan.my_sample(trajectories, sample):
+        plot_line(ax, traj, "r")
+    plt.show()
 
 def plot_plane_flux_trajectories(trajectories, r, q, eps_r):
 
@@ -315,7 +320,7 @@ def testing_disk_geometric_error(trajectories, alpha, max_r, count):
     print("DP Error: {}".format(50 * post_process_error(test_disk_error(trajectories, sample, alpha, max_r))))
 
 #trajectories = paths.read_geolife_files(1000)
-trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/osm_eu_sample_10k_nw.tsv")
+trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/osm_eu_sample_10k_nw.tsv", filter_long=True)
 
 #trajectories = clean(trajectories)
 #print(len(trajectories))
@@ -325,11 +330,12 @@ r=.02
 p =.5
 q= 1.0
 eps_r=.01
+plot_trajectory_set(trajectories, 10000)
 
 #plot_full_trajectories_intersection_rect(trajectories, r)
 # OSM EU 1/30000, 1/300
 # BJTAXI 1/500 1/5
-testing(trajectories, 1/30000, 1/300)
+#testing(trajectories, 1/30000, 1/300)
 #testing_geometric_error(trajectories, 1/500, 1/10, 3)
 
 
