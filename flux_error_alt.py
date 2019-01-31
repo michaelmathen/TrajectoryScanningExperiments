@@ -2,11 +2,12 @@ import flux_testing
 import paths
 import utils
 import pyscan
+import file
 
 if __name__ == "__main__":
 
     #trajectories = paths.read_geolife_files(100)
-    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/bjtaxi_samples_100k_nw.tsv")
+    trajectories = paths.read_dong_csv(file.PATH + "bjtaxi_samples_100k_nw.tsv")
 
     st_pts, end_pts = pyscan.trajectories_to_flux(trajectories)
     st_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in st_pts]
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     disc = utils.disc_to_func("disc")
     #red, blue, _, _ = pyscan.plant_partial_disk(trajectories, r, p, q, eps_r, disc)
 
-    for region_name in ["halfplane"]:#, "rectangle", "disk"]:
+    for region_name in ["disk"]:#, "rectangle", "disk"]:
         if region_name == "disk":
             method = pyscan.plant_disk
         elif region_name == "rectangle":
