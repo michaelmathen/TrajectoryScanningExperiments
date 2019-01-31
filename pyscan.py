@@ -230,7 +230,6 @@ def plant_full_square(trajectories, r, p, q, disc, max_count=32):
 
 
 
-
 def plant_full_halfplane(trajectories, r, p, q, disc):
     """
     Choose a point at random from a trajectory and then expand outward from there.
@@ -499,7 +498,7 @@ def plant_partial_rectangle(trajectories, r, p, q, eps, disc):
 
     trajectory_obj = [Trajectory(pts) for pts in trajectories]
     all_pts = uniform_sample(trajectory_obj, int(1 / eps ** 2 + 1), False)
-
+    print(all_pts)
     _, _, rect = plant_rectangle(all_pts, r, p, q)
     inside_rect = [traj for traj in trajectory_obj if rect.intersects_trajectory(traj)]
     outside_rect = [traj for traj in trajectory_obj if not rect.intersects_trajectory(traj)]
