@@ -13,7 +13,7 @@ if __name__ == "__main__":
     st_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in st_pts]
     end_pts = [pyscan.WPoint(1.0, float(p[0]), float(p[1]), 1.0) for p in end_pts]
 
-    r = .05
+    r = .01
     q = .2
     p = .5
     eps_r = .001
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         if region_name == "halfplane":
             for ham_sand in [False, True]:
                 output_file = "flux_error_{}_{}.csv".format(region_name, "ham" if ham_sand else "rand")
-                flux_testing.testing_flux_framework(output_file, red, blue, -1, -5, 20,
+                flux_testing.testing_flux_framework(output_file, red, blue, -1, -4, 20,
                                                     region_name=region_name,
                                                     two_level_sample=True,
                                                     ham_sample=ham_sand,
