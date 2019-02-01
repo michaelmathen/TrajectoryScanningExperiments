@@ -218,7 +218,7 @@ def testing_full_framework(
 
 def generate_rectangle_sets(fname, r, p, q, max_side_length):
 
-    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
+    trajectories = paths.read_dong_csv("/uusoc/scratch/raven4/dongx/trajectory_paper_code/data/samples/{}.tsv".format(fname))
     disc = utils.disc_to_func("disc")
     while True:
         red, blue, planted_reg, _ = pyscan.plant_full_square(trajectories, r, p, q, disc)
@@ -231,7 +231,7 @@ def generate_rectangle_sets(fname, r, p, q, max_side_length):
 def generate_disk_sets(fname, r, p, q, min_r, max_r):
 
     disc = utils.disc_to_func("disc")
-    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
+    trajectories = paths.read_dong_csv("/uusoc/scratch/raven1/dongx/trajectory_paper_code/data/samples/{}.tsv".format(fname))
 
     while True:
         red, blue, planted_reg , planted_mx = pyscan.plant_full_disk(trajectories, r, p, q, disc)
@@ -242,7 +242,7 @@ def generate_disk_sets(fname, r, p, q, min_r, max_r):
 
 def generate_halfplane_sets(fname, r, p, q):
     disc = utils.disc_to_func("disc")
-    trajectories = paths.read_dong_csv("/data/Dong_sets/Trajectory_Sets/samples/{}.tsv".format(fname))
+    trajectories = paths.read_dong_csv("/uusoc/scratch/raven1/dongx/trajectory_paper_code/data/samples/{}.tsv".format(fname))
     red, blue, planted_reg, planted_mx = pyscan.plant_full_halfplane(trajectories, r, p, q, disc)
     return red, blue
 
